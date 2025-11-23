@@ -3,6 +3,7 @@ require_once 'auth.php';
 Auth::requireAuth();
 
 $conn = getDBConnection();
+$userInfo = Auth::getUserInfo();
 
 // Get all customers for dropdown
 $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers ORDER BY name");
@@ -14,16 +15,53 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>POS | Ayurvedic Pharmacy</title>
     
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <link rel="shortcut icon" href="assets/images/logo.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
     
     <style>
-        .product-search-box {
-            position: relative;
+        .pos-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            margin-top: -80px;
         }
+        
+        @media (max-width: 1200px) {
+            .pos-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .billing-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .billing-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .items-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
         .search-results {
             position: absolute;
             top: 100%;
@@ -31,41 +69,186 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             right: 0;
             background: white;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
             max-height: 300px;
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
         }
+        
         .search-result-item {
-            padding: 10px;
+            padding: 12px;
             cursor: pointer;
             border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
         }
+        
         .search-result-item:hover {
             background-color: #f8f9fa;
         }
-        .cart-item {
-            padding: 15px;
-            border-bottom: 1px solid #e9ecef;
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .quantity-control button {
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .total-section {
+        
+        .items-table th {
             background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 14px;
+        }
+        
+        .items-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        
+        .item-input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .unit-select {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .invoice-preview {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+        
+        .invoice-header h4 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        
+        .invoice-detail-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .invoice-items {
+            margin-top: 20px;
+        }
+        
+        .invoice-items table {
+            width: 100%;
+            font-size: 12px;
+        }
+        
+        .invoice-items th {
+            background: #f8f9fa;
+            padding: 8px 5px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .invoice-items td {
+            padding: 8px 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .invoice-totals {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #000;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+        
+        .total-row.grand-total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            padding-top: 10px;
+            border-top: 2px dashed #000;
+            margin-top: 10px;
+        }
+        
+        .payment-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #218838;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .remove-btn:hover {
+            background: #c82333;
         }
     </style>
 </head>
@@ -82,96 +265,180 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
         <?php include 'includes/header.php'; ?>
         
         <div class="conatiner-fluid content-inner mt-n5 py-0">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Add Products</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="product-search-box">
-                                <input type="text" id="productSearch" class="form-control" 
-                                       placeholder="Search products by name or generic name...">
-                                <div id="searchResults" class="search-results" style="display: none;"></div>
+            <div class="pos-container">
+                <!-- Left Side - Billing & Items -->
+                <div>
+                    <!-- Billing Details -->
+                    <div class="billing-card">
+                        <h5 class="mb-3">Billing Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label><strong>Billing From</strong></label>
+                                <input type="text" class="billing-input" id="billingFrom" value="<?php echo htmlspecialchars($userInfo['full_name']); ?>" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label><strong>Customer Type</strong></label>
+                                <select class="billing-input" id="customerType" onchange="toggleCustomerInput()">
+                                    <option value="walkin">Walk-in Customer</option>
+                                    <option value="existing">Existing Customer</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="card mt-3">
-                        <div class="card-header d-flex justify-content-between">
-                            <h4 class="card-title">Cart Items</h4>
-                            <button class="btn btn-sm btn-danger" onclick="clearCart()">Clear Cart</button>
-                        </div>
-                        <div class="card-body">
-                            <div id="cartItems">
-                                <p class="text-center text-muted py-5">No items in cart</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Customer Information</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label">Customer</label>
-                                <select id="customerId" class="form-select">
-                                    <option value="">Walk-in Customer</option>
-                                    <?php while ($customer = $customers->fetch_assoc()): ?>
-                                        <option value="<?php echo $customer['customer_id']; ?>">
-                                            <?php echo htmlspecialchars($customer['name']); ?> 
-                                            (<?php echo htmlspecialchars($customer['contact_no']); ?>)
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <label><strong>Customer Name</strong></label>
+                                <input type="text" class="billing-input" id="customerName" 
+                                       placeholder="Enter customer name (optional)" 
+                                       style="display: block;">
+                                
+                                <select class="billing-input" id="customerId" style="display: none;" onchange="loadCustomerDetails()">
+                                    <option value="">Select Customer</option>
+                                    <?php 
+                                    $customers->data_seek(0);
+                                    while ($customer = $customers->fetch_assoc()): 
+                                    ?>
+                                        <option value="<?php echo $customer['customer_id']; ?>" 
+                                                data-contact="<?php echo htmlspecialchars($customer['contact_no']); ?>">
+                                            <?php echo htmlspecialchars($customer['name']); ?>
                                         </option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
-                            <button class="btn btn-sm btn-outline-primary w-100" onclick="window.location.href='customers.php?action=add'">
-                                + Add New Customer
-                            </button>
+                            <div class="col-md-6">
+                                <label><strong>Mobile Number</strong></label>
+                                <input type="text" class="billing-input" id="customerMobile" 
+                                       placeholder="Enter mobile number (optional)">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h4 class="card-title">Payment Details</h4>
+                    <!-- Items Section -->
+                    <div class="items-section">
+                        <h5 class="mb-3">Items</h5>
+                        
+                        <!-- Search Box -->
+                        <div class="search-box">
+                            <input type="text" class="billing-input" id="productSearch" 
+                                   placeholder="Search Your Item Here...">
+                            <div id="searchResults" class="search-results"></div>
                         </div>
-                        <div class="card-body">
-                            <div class="total-section">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Subtotal:</span>
-                                    <strong>Rs. <span id="subtotal">0.00</span></strong>
+
+                        <!-- Items Table -->
+                        <div class="table-responsive">
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%;">#</th>
+                                        <th style="width: 35%;">ITEM NAME</th>
+                                        <th style="width: 15%;">UNIT PRICE</th>
+                                        <th style="width: 15%;">QUANTITY</th>
+                                        <th style="width: 10%;">UNIT</th>
+                                        <th style="width: 15%;">NET AMOUNT</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartItems">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            No items added yet. Search and add products above.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Invoice Preview -->
+                <div>
+                    <div class="invoice-preview">
+                        <div class="invoice-header">
+                            <h4>ErundeniyaOsu.lk</h4>
+                            <p style="margin: 5px 0; font-size: 12px;">Address of the hospital</p>
+                            <p style="margin: 0; font-size: 12px;">Tel: 0000000000</p>
+                        </div>
+
+                        <div class="invoice-details">
+                            <div>
+                                <div class="invoice-detail-group">
+                                    <label>Invoice date</label>
+                                    <div id="invoiceDate"><?php echo date('M jS, Y'); ?></div>
                                 </div>
-                                <div class="d-flex justify-content-between mb-3">
-                                    <span>Discount:</span>
-                                    <div class="input-group input-group-sm" style="width: 120px;">
-                                        <input type="number" id="discount" class="form-control" value="0" min="0" step="0.01">
-                                        <span class="input-group-text">Rs.</span>
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="d-flex justify-content-between mb-3">
-                                    <h5>Total:</h5>
-                                    <h5 class="text-success">Rs. <span id="total">0.00</span></h5>
+                                <div class="invoice-detail-group mt-2">
+                                    <label>Invoice number</label>
+                                    <div id="invoiceNumber">00000000</div>
                                 </div>
                             </div>
+                            <div>
+                                <div class="invoice-detail-group">
+                                    <label>User</label>
+                                    <div id="invoiceUser"><?php echo htmlspecialchars($userInfo['full_name']); ?></div>
+                                </div>
+                                <div class="invoice-detail-group mt-2">
+                                    <label>Time</label>
+                                    <div id="invoiceTime"><?php echo date('h:i A'); ?></div>
+                                </div>
+                            </div>
+                        </div>
 
-                            <div class="mb-3 mt-3">
-                                <label class="form-label">Payment Type</label>
-                                <select id="paymentType" class="form-select">
-                                    <option value="cash">Cash</option>
-                                    <option value="credit">Credit</option>
-                                </select>
+                        <!-- Invoice Items -->
+                        <div class="invoice-items">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Qty</th>
+                                        <th>Unit</th>
+                                        <th>Price</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceItemsList">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No items</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="invoice-totals">
+                            <div class="total-row">
+                                <span>Net total</span>
+                                <span id="netTotal">0.00</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Discount</span>
+                                <span>
+                                    <input type="number" id="discount" value="0" min="0" step="0.01" 
+                                           style="width: 80px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; text-align: right;"
+                                           onchange="updateTotals()">
+                                </span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>TOTAL</span>
+                                <span id="grandTotal">0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Section -->
+                        <div class="payment-section">
+                            <label><strong>Payment Method</strong></label>
+                            <select class="billing-input" id="paymentMethod">
+                                <option value="cash">Cash</option>
+                                <option value="credit">Credit</option>
+                            </select>
+
+                            <div class="mt-3" id="cashPaymentSection">
+                                <label><strong>Paid</strong></label>
+                                <input type="number" class="billing-input" id="paidAmount" value="0" min="0" step="0.01" onchange="calculateChange()">
+                                
+                                <label><strong>Change</strong></label>
+                                <input type="text" class="billing-input" id="changeAmount" value="0.00" readonly>
                             </div>
 
-                            <button class="btn btn-primary w-100 mb-2" onclick="processPayment()">
-                                Complete Sale
-                            </button>
-                            <button class="btn btn-outline-secondary w-100" onclick="clearCart()">
-                                Cancel
-                            </button>
+                            <button class="btn-action btn-save" onclick="saveInvoice()">Save Invoice</button>
+                            <button class="btn-action btn-cancel" onclick="clearAll()">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -189,6 +456,54 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
     <script>
         let cart = [];
         let searchTimeout;
+        let invoiceCounter = 1;
+
+        // Update invoice number
+        document.getElementById('invoiceNumber').textContent = String(invoiceCounter).padStart(8, '0');
+
+        // Update time every second
+        setInterval(() => {
+            document.getElementById('invoiceTime').textContent = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }, 1000);
+
+        // Toggle between walk-in and existing customer
+        function toggleCustomerInput() {
+            const customerType = document.getElementById('customerType').value;
+            const customerNameInput = document.getElementById('customerName');
+            const customerSelect = document.getElementById('customerId');
+            const customerMobile = document.getElementById('customerMobile');
+            
+            if (customerType === 'walkin') {
+                customerNameInput.style.display = 'block';
+                customerSelect.style.display = 'none';
+                customerSelect.value = '';
+                customerMobile.value = '';
+                customerMobile.readOnly = false;
+            } else {
+                customerNameInput.style.display = 'none';
+                customerSelect.style.display = 'block';
+                customerNameInput.value = '';
+                customerMobile.value = '';
+                customerMobile.readOnly = false;
+            }
+        }
+        
+        // Load customer details when selected from dropdown
+        function loadCustomerDetails() {
+            const select = document.getElementById('customerId');
+            const selectedOption = select.options[select.selectedIndex];
+            const contactNo = selectedOption.getAttribute('data-contact');
+            
+            if (contactNo) {
+                document.getElementById('customerMobile').value = contactNo;
+            } else {
+                document.getElementById('customerMobile').value = '';
+            }
+        }
 
         // Product search
         document.getElementById('productSearch').addEventListener('input', function() {
@@ -218,7 +533,7 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             const resultsDiv = document.getElementById('searchResults');
             
             if (products.length === 0) {
-                resultsDiv.innerHTML = '<div class="p-3 text-muted">No products found</div>';
+                resultsDiv.innerHTML = '<div class="search-result-item text-muted">No products found</div>';
                 resultsDiv.style.display = 'block';
                 return;
             }
@@ -226,10 +541,10 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             let html = '';
             products.forEach(product => {
                 html += `
-                    <div class="search-result-item" onclick="addToCart(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                    <div class="search-result-item" onclick='addToCart(${JSON.stringify(product).replace(/'/g, "&#39;")})'>
                         <strong>${product.product_name}</strong>
                         ${product.generic_name ? `<br><small class="text-muted">${product.generic_name}</small>` : ''}
-                        <br><small>Batch: ${product.batch_no} | Stock: ${product.quantity_in_stock} | Rs. ${parseFloat(product.selling_price).toFixed(2)}</small>
+                        <br><small>Stock: ${product.quantity_in_stock} | Rs. ${parseFloat(product.selling_price).toFixed(2)}</small>
                     </div>
                 `;
             });
@@ -239,7 +554,6 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
         }
 
         function addToCart(product) {
-            // Check if product already in cart
             const existingItem = cart.find(item => item.batch_id === product.batch_id);
             
             if (existingItem) {
@@ -255,8 +569,9 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                     product_id: product.product_id,
                     product_name: product.product_name,
                     batch_no: product.batch_no,
-                    selling_price: parseFloat(product.selling_price),
-                    quantity: 1,
+                    price_per_kg: parseFloat(product.selling_price), // Store as per kg price
+                    quantity: 1, // Default 1 kg
+                    unit: 'kg', // Default unit kg
                     max_stock: product.quantity_in_stock
                 });
             }
@@ -265,76 +580,136 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('productSearch').value = '';
         }
+        
+        // Calculate actual price based on unit
+        function calculatePrice(item) {
+            let pricePerUnit = item.price_per_kg;
+            
+            // Convert price based on unit
+            switch(item.unit) {
+                case 'g':
+                    pricePerUnit = item.price_per_kg / 1000; // Price per gram
+                    break;
+                case 'kg':
+                    pricePerUnit = item.price_per_kg; // Price per kg
+                    break;
+                case 'ml':
+                    pricePerUnit = item.price_per_kg / 1000; // Assume same as gram
+                    break;
+                case 'bottle':
+                    pricePerUnit = item.price_per_kg; // Assume bottle = 1 unit
+                    break;
+            }
+            
+            return pricePerUnit * item.quantity;
+        }
+        
+        // Get display price per unit
+        function getUnitPrice(item) {
+            switch(item.unit) {
+                case 'g':
+                    return item.price_per_kg / 1000;
+                case 'kg':
+                    return item.price_per_kg;
+                case 'ml':
+                    return item.price_per_kg / 1000;
+                case 'bottle':
+                    return item.price_per_kg;
+                default:
+                    return item.price_per_kg;
+            }
+        }
 
         function updateCartDisplay() {
             const cartDiv = document.getElementById('cartItems');
+            const invoiceItemsDiv = document.getElementById('invoiceItemsList');
             
             if (cart.length === 0) {
-                cartDiv.innerHTML = '<p class="text-center text-muted py-5">No items in cart</p>';
+                cartDiv.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No items added yet.</td></tr>';
+                invoiceItemsDiv.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No items</td></tr>';
                 updateTotals();
                 return;
             }
 
-            let html = '';
+            let cartHtml = '';
+            let invoiceHtml = '';
+            
             cart.forEach((item, index) => {
-                const itemTotal = item.quantity * item.selling_price;
-                html += `
-                    <div class="cart-item">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <strong>${item.product_name}</strong>
-                                <br><small class="text-muted">Batch: ${item.batch_no}</small>
-                                <br><small class="text-muted">Rs. ${item.selling_price.toFixed(2)} each</small>
-                            </div>
-                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
-                                <i class="icon">×</i>
-                            </button>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="quantity-control">
-                                <button class="btn btn-sm btn-outline-primary" onclick="updateQuantity(${index}, -1)">-</button>
-                                <input type="number" class="form-control form-control-sm text-center" 
-                                       style="width: 60px;" value="${item.quantity}" 
-                                       onchange="setQuantity(${index}, this.value)" min="1" max="${item.max_stock}">
-                                <button class="btn btn-sm btn-outline-primary" onclick="updateQuantity(${index}, 1)">+</button>
-                            </div>
-                            <strong>Rs. ${itemTotal.toFixed(2)}</strong>
-                        </div>
-                    </div>
+                const unitPrice = getUnitPrice(item);
+                const itemTotal = calculatePrice(item);
+                
+                // Show appropriate placeholder based on unit
+                let qtyPlaceholder = '';
+                switch(item.unit) {
+                    case 'g': qtyPlaceholder = 'e.g., 250 (250g)'; break;
+                    case 'kg': qtyPlaceholder = 'e.g., 1.5 (1.5kg)'; break;
+                    case 'ml': qtyPlaceholder = 'e.g., 500 (500ml)'; break;
+                    case 'bottle': qtyPlaceholder = 'e.g., 2 (2 bottles)'; break;
+                }
+                
+                cartHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <strong>${item.product_name}</strong>
+                            <br><small class="text-muted">Rs. ${item.price_per_kg.toFixed(2)}/kg</small>
+                        </td>
+                        <td>Rs. ${unitPrice.toFixed(4)}</td>
+                        <td>
+                            <input type="number" class="item-input" value="${item.quantity}" 
+                                   min="0.001" step="any"
+                                   placeholder="${qtyPlaceholder}"
+                                   onchange="updateQuantity(${index}, this.value)">
+                        </td>
+                        <td>
+                            <select class="unit-select" onchange="updateUnit(${index}, this.value)">
+                                <option value="g" ${item.unit === 'g' ? 'selected' : ''}>g</option>
+                                <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>kg</option>
+                                <option value="ml" ${item.unit === 'ml' ? 'selected' : ''}>ml</option>
+                                <option value="bottle" ${item.unit === 'bottle' ? 'selected' : ''}>bottle</option>
+                            </select>
+                        </td>
+                        <td>Rs. ${itemTotal.toFixed(2)}</td>
+                        <td>
+                            <button class="remove-btn" onclick="removeFromCart(${index})">✕</button>
+                        </td>
+                    </tr>
+                `;
+                
+                invoiceHtml += `
+                    <tr>
+                        <td>${item.product_name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.unit}</td>
+                        <td>${unitPrice.toFixed(2)}</td>
+                        <td>${itemTotal.toFixed(2)}</td>
+                    </tr>
                 `;
             });
 
-            cartDiv.innerHTML = html;
+            cartDiv.innerHTML = cartHtml;
+            invoiceItemsDiv.innerHTML = invoiceHtml;
             updateTotals();
         }
 
-        function updateQuantity(index, change) {
-            const item = cart[index];
-            const newQuantity = item.quantity + change;
-
-            if (newQuantity < 1 || newQuantity > item.max_stock) {
-                if (newQuantity > item.max_stock) {
-                    Swal.fire('Error', 'Not enough stock available', 'error');
-                }
-                return;
-            }
-
-            item.quantity = newQuantity;
-            updateCartDisplay();
-        }
-
-        function setQuantity(index, value) {
-            const quantity = parseInt(value);
+        function updateQuantity(index, value) {
+            const quantity = parseFloat(value);
             const item = cart[index];
 
-            if (isNaN(quantity) || quantity < 1) {
+            if (isNaN(quantity) || quantity <= 0) {
                 Swal.fire('Error', 'Invalid quantity', 'error');
                 updateCartDisplay();
                 return;
             }
 
-            if (quantity > item.max_stock) {
-                Swal.fire('Error', 'Not enough stock available', 'error');
+            // Check stock based on unit
+            let stockInSelectedUnit = item.max_stock;
+            if (item.unit === 'g' || item.unit === 'ml') {
+                stockInSelectedUnit = item.max_stock * 1000; // Convert kg to g/ml
+            }
+
+            if (quantity > stockInSelectedUnit) {
+                Swal.fire('Error', `Not enough stock. Available: ${stockInSelectedUnit} ${item.unit}`, 'error');
                 updateCartDisplay();
                 return;
             }
@@ -343,60 +718,99 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             updateCartDisplay();
         }
 
+        function updateUnit(index, unit) {
+            const item = cart[index];
+            const oldUnit = item.unit;
+            
+            // Convert quantity when unit changes
+            if (oldUnit !== unit) {
+                if (oldUnit === 'kg' && unit === 'g') {
+                    item.quantity = item.quantity * 1000;
+                } else if (oldUnit === 'g' && unit === 'kg') {
+                    item.quantity = item.quantity / 1000;
+                } else if (oldUnit === 'kg' && unit === 'ml') {
+                    item.quantity = item.quantity * 1000;
+                } else if (oldUnit === 'ml' && unit === 'kg') {
+                    item.quantity = item.quantity / 1000;
+                } else if (oldUnit === 'g' && unit === 'ml') {
+                    // Keep same value
+                } else if (oldUnit === 'ml' && unit === 'g') {
+                    // Keep same value
+                }
+            }
+            
+            item.unit = unit;
+            updateCartDisplay();
+        }
+
         function removeFromCart(index) {
             cart.splice(index, 1);
             updateCartDisplay();
         }
 
-        function clearCart() {
-            if (cart.length === 0) return;
-            
-            Swal.fire({
-                title: 'Clear Cart?',
-                text: 'Are you sure you want to clear all items?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, clear it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    cart = [];
-                    updateCartDisplay();
-                }
-            });
-        }
-
         function updateTotals() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.selling_price), 0);
+            const subtotal = cart.reduce((sum, item) => sum + calculatePrice(item), 0);
             const discount = parseFloat(document.getElementById('discount').value) || 0;
             const total = subtotal - discount;
 
-            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-            document.getElementById('total').textContent = Math.max(0, total).toFixed(2);
+            document.getElementById('netTotal').textContent = subtotal.toFixed(2);
+            document.getElementById('grandTotal').textContent = Math.max(0, total).toFixed(2);
+            
+            calculateChange();
         }
 
-        // Update totals when discount changes
-        document.getElementById('discount').addEventListener('input', updateTotals);
+        function calculateChange() {
+            const total = parseFloat(document.getElementById('grandTotal').textContent);
+            const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+            const change = paid - total;
+            
+            document.getElementById('changeAmount').value = Math.max(0, change).toFixed(2);
+        }
 
-        function processPayment() {
+        // Payment method change
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            const cashSection = document.getElementById('cashPaymentSection');
+            if (this.value === 'cash') {
+                cashSection.style.display = 'block';
+            } else {
+                cashSection.style.display = 'none';
+            }
+        });
+
+        function saveInvoice() {
             if (cart.length === 0) {
                 Swal.fire('Error', 'Cart is empty', 'error');
                 return;
             }
 
-            const customerId = document.getElementById('customerId').value;
-            const paymentType = document.getElementById('paymentType').value;
+            const customerType = document.getElementById('customerType').value;
+            let customerId = null;
+            let customerName = 'Walk-in Customer';
+            let customerMobile = document.getElementById('customerMobile').value.trim();
+            
+            if (customerType === 'walkin') {
+                customerName = document.getElementById('customerName').value.trim() || 'Walk-in Customer';
+            } else {
+                customerId = document.getElementById('customerId').value;
+                if (customerId) {
+                    const select = document.getElementById('customerId');
+                    customerName = select.options[select.selectedIndex].text;
+                }
+            }
+
+            const paymentType = document.getElementById('paymentMethod').value;
             const discount = parseFloat(document.getElementById('discount').value) || 0;
-            const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.selling_price), 0);
+            const subtotal = cart.reduce((sum, item) => sum + calculatePrice(item), 0);
             const total = subtotal - discount;
 
             Swal.fire({
-                title: 'Complete Sale?',
+                title: 'Save Invoice?',
                 html: `
                     <div class="text-start">
+                        <p><strong>Customer:</strong> ${customerName}</p>
+                        ${customerMobile ? `<p><strong>Mobile:</strong> ${customerMobile}</p>` : ''}
                         <p><strong>Total Amount:</strong> Rs. ${total.toFixed(2)}</p>
-                        <p><strong>Payment Type:</strong> ${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}</p>
+                        <p><strong>Payment:</strong> ${paymentType.toUpperCase()}</p>
                         <p><strong>Items:</strong> ${cart.length}</p>
                     </div>
                 `,
@@ -404,15 +818,15 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                 showCancelButton: true,
                 confirmButtonColor: '#28a745',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Complete Sale'
+                confirmButtonText: 'Save & Print'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    completeSale(customerId, paymentType, discount, subtotal, total);
+                    processSale(customerId, customerName, customerMobile, paymentType, discount, subtotal, total);
                 }
             });
         }
 
-        function completeSale(customerId, paymentType, discount, subtotal, total) {
+        function processSale(customerId, customerName, customerMobile, paymentType, discount, subtotal, total) {
             Swal.fire({
                 title: 'Processing...',
                 text: 'Please wait...',
@@ -424,12 +838,20 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                 }
             });
 
+            // Get payment details
+            const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
+            const changeAmount = parseFloat(document.getElementById('changeAmount').value) || 0;
+
             const data = {
                 customer_id: customerId || null,
+                customer_name: customerName,
+                customer_mobile: customerMobile,
                 payment_type: paymentType,
                 discount: discount,
                 total_amount: subtotal,
                 net_amount: total,
+                paid_amount: paidAmount,
+                change_amount: changeAmount,
                 items: cart
             };
 
@@ -445,31 +867,23 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                 if (result.success) {
                     Swal.fire({
                         title: 'Success!',
-                        text: 'Sale completed successfully',
+                        text: 'Invoice saved successfully',
                         icon: 'success',
                         confirmButtonColor: '#28a745'
                     }).then(() => {
-                        cart = [];
-                        updateCartDisplay();
-                        document.getElementById('discount').value = '0';
-                        document.getElementById('customerId').value = '';
+                        // Print invoice with payment details
+                        const printUrl = 'print_receipt.php?sale_id=' + result.sale_id + 
+                                       '&paid=' + paidAmount + 
+                                       '&change=' + changeAmount;
+                        window.open(printUrl, '_blank');
                         
-                        // Ask if want to print receipt
-                        Swal.fire({
-                            title: 'Print Receipt?',
-                            text: 'Would you like to print the receipt?',
-                            icon: 'question',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, print',
-                            cancelButtonText: 'No'
-                        }).then((printResult) => {
-                            if (printResult.isConfirmed) {
-                                window.open('print_receipt.php?sale_id=' + result.sale_id, '_blank');
-                            }
-                        });
+                        // Clear cart
+                        clearAll();
+                        invoiceCounter++;
+                        document.getElementById('invoiceNumber').textContent = String(invoiceCounter).padStart(8, '0');
                     });
                 } else {
-                    Swal.fire('Error', result.message || 'Failed to complete sale', 'error');
+                    Swal.fire('Error', result.message || 'Failed to save invoice', 'error');
                 }
             })
             .catch(error => {
@@ -478,9 +892,44 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             });
         }
 
+        function clearAll() {
+            if (cart.length > 0) {
+                Swal.fire({
+                    title: 'Clear All?',
+                    text: 'Are you sure you want to clear all items?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Yes, clear!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        cart = [];
+                        document.getElementById('discount').value = '0';
+                        document.getElementById('paidAmount').value = '0';
+                        document.getElementById('customerType').value = 'walkin';
+                        document.getElementById('customerName').value = '';
+                        document.getElementById('customerMobile').value = '';
+                        document.getElementById('customerId').value = '';
+                        toggleCustomerInput();
+                        updateCartDisplay();
+                    }
+                });
+            } else {
+                cart = [];
+                document.getElementById('discount').value = '0';
+                document.getElementById('paidAmount').value = '0';
+                document.getElementById('customerType').value = 'walkin';
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerMobile').value = '';
+                document.getElementById('customerId').value = '';
+                toggleCustomerInput();
+                updateCartDisplay();
+            }
+        }
+
         // Close search results when clicking outside
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.product-search-box')) {
+            if (!e.target.closest('.search-box')) {
                 document.getElementById('searchResults').style.display = 'none';
             }
         });

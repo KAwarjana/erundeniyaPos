@@ -409,7 +409,7 @@ body {
 .bd-aside .active {
   font-weight: 600;
   background-color: rgba(58, 87, 232, 0.1);
-  color: #3a57e8;
+  color: #077a16;
 }
 
 .bd-aside .btn {
@@ -430,7 +430,7 @@ body {
 .bd-aside .btn:hover,
 .bd-aside .btn:focus {
   background-color: rgba(58, 87, 232, 0.1);
-  color: #3a57e8;
+  color: #077a16;
 }
 
 .bd-aside .btn:focus {
@@ -687,7 +687,7 @@ body.uikit .btn-download {
   z-index: 999;
   text-align: center;
   cursor: pointer;
-  background: #3a57e8;
+  background: #077a16;
   color: #ffffff;
   padding: 0.2rem;
   -webkit-border-radius: 0 1rem 1rem 0;

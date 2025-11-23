@@ -3,6 +3,8 @@ require_once 'auth.php';
 Auth::requireAuth();
 
 $saleId = $_GET['sale_id'] ?? 0;
+$paidAmount = floatval($_GET['paid'] ?? 0);
+$changeAmount = floatval($_GET['change'] ?? 0);
 
 if ($saleId <= 0) {
     die('Invalid sale ID');
@@ -32,7 +34,7 @@ if ($saleResult->num_rows === 0) {
 
 $sale = $saleResult->fetch_assoc();
 
-// Get sale items
+// Get sale items with unit information
 $stmt = $conn->prepare("SELECT 
     si.*,
     p.product_name,
@@ -54,7 +56,7 @@ $items = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt - Sale #<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?></title>
+    <title>Receipt - #<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?></title>
     <style>
         * {
             margin: 0;
@@ -68,6 +70,7 @@ $items = $stmt->get_result();
             margin: 0 auto;
             padding: 10mm;
             background: #fff;
+            font-size: 12px;
         }
         
         .receipt {
@@ -82,7 +85,7 @@ $items = $stmt->get_result();
         }
         
         .header h1 {
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 5px;
             font-weight: bold;
         }
@@ -98,7 +101,13 @@ $items = $stmt->get_result();
             line-height: 1.6;
         }
         
-        .info-section .label {
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        
+        .info-label {
             font-weight: bold;
         }
         
@@ -107,46 +116,36 @@ $items = $stmt->get_result();
             margin: 10px 0;
         }
         
+        .divider-double {
+            border-top: 2px solid #000;
+            margin: 10px 0;
+        }
+        
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin: 10px 0;
             font-size: 11px;
         }
         
         .items-table th {
             border-bottom: 1px solid #000;
-            padding: 5px 0;
+            padding: 5px 2px;
             text-align: left;
             font-weight: bold;
         }
         
         .items-table td {
-            padding: 5px 0;
+            padding: 5px 2px;
             vertical-align: top;
-        }
-        
-        .items-table .item-name {
-            width: 45%;
-        }
-        
-        .items-table .item-qty {
-            width: 15%;
-            text-align: center;
-        }
-        
-        .items-table .item-price {
-            width: 20%;
-            text-align: right;
-        }
-        
-        .items-table .item-total {
-            width: 20%;
-            text-align: right;
         }
         
         .item-row {
             border-bottom: 1px dotted #ddd;
+        }
+        
+        .item-name {
+            font-weight: bold;
         }
         
         .item-details {
@@ -154,25 +153,37 @@ $items = $stmt->get_result();
             color: #666;
         }
         
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
         .totals-section {
-            border-top: 2px solid #000;
-            padding-top: 10px;
             margin-top: 10px;
             font-size: 12px;
         }
         
-        .totals-row {
+        .total-row {
             display: flex;
             justify-content: space-between;
             padding: 3px 0;
         }
         
-        .totals-row.grand-total {
+        .total-row.grand-total {
             font-size: 14px;
             font-weight: bold;
-            border-top: 2px dashed #000;
+            border-top: 2px solid #000;
             padding-top: 8px;
             margin-top: 5px;
+        }
+        
+        .payment-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #000;
         }
         
         .footer {
@@ -196,7 +207,9 @@ $items = $stmt->get_result();
         .barcode {
             text-align: center;
             margin: 15px 0;
-            font-size: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 3px;
         }
         
         .print-button {
@@ -237,7 +250,7 @@ $items = $stmt->get_result();
 </head>
 <body>
     <div class="print-button">
-        <button onclick="window.print()">🖨️ Print Receipt</button>
+        <button onclick="window.print()">🖨️ Print</button>
         <button onclick="window.close()">✖️ Close</button>
     </div>
 
@@ -245,39 +258,59 @@ $items = $stmt->get_result();
         <!-- Header -->
         <div class="header">
             <h1>AYURVEDIC PHARMACY</h1>
+            <p>ErundeniyaOsu.lk</p>
             <p>Quality Ayurvedic Products & Medicines</p>
             <p>No. 123, Main Street, Negombo, Sri Lanka</p>
             <p>Tel: +94 31 222 3333 | +94 77 123 4567</p>
-            <p>Email: info@ayurvedapharmacy.lk</p>
+            <p>Email: info@erundeniyaosu.lk</p>
         </div>
 
         <!-- Receipt Info -->
         <div class="info-section">
-            <div><span class="label">Receipt No:</span> #<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?></div>
-            <div><span class="label">Date:</span> <?php echo date('d M Y, h:i A', strtotime($sale['sale_date'])); ?></div>
-            <?php if ($sale['customer_name']): ?>
-                <div class="divider"></div>
-                <div><span class="label">Customer:</span> <?php echo htmlspecialchars($sale['customer_name']); ?></div>
-                <?php if ($sale['contact_no']): ?>
-                    <div><span class="label">Contact:</span> <?php echo htmlspecialchars($sale['contact_no']); ?></div>
-                <?php endif; ?>
-            <?php else: ?>
-                <div><span class="label">Customer:</span> Walk-in Customer</div>
-            <?php endif; ?>
-            <div><span class="label">Cashier:</span> <?php echo htmlspecialchars($sale['user_name']); ?></div>
-            <div><span class="label">Payment:</span> <?php echo strtoupper($sale['payment_type']); ?></div>
+            <div class="info-row">
+                <span class="info-label">Receipt No:</span>
+                <span>#<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span><?php echo date('d M Y, h:i A', strtotime($sale['sale_date'])); ?></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cashier:</span>
+                <span><?php echo htmlspecialchars($sale['user_name']); ?></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Payment:</span>
+                <span><?php echo strtoupper($sale['payment_type']); ?></span>
+            </div>
         </div>
 
-        <div class="divider"></div>
+        <?php if ($sale['customer_name'] || !empty($_GET['customer_name'])): ?>
+            <div class="divider"></div>
+            <div class="info-section">
+                <div class="info-row">
+                    <span class="info-label">Customer:</span>
+                    <span><?php echo htmlspecialchars($sale['customer_name'] ?? 'Walk-in Customer'); ?></span>
+                </div>
+                <?php if ($sale['contact_no']): ?>
+                    <div class="info-row">
+                        <span class="info-label">Mobile:</span>
+                        <span><?php echo htmlspecialchars($sale['contact_no']); ?></span>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="divider-double"></div>
 
         <!-- Items Table -->
         <table class="items-table">
             <thead>
                 <tr>
-                    <th class="item-name">Item</th>
-                    <th class="item-qty">Qty</th>
-                    <th class="item-price">Price</th>
-                    <th class="item-total">Total</th>
+                    <th style="width: 45%;">Item</th>
+                    <th style="width: 15%;" class="text-center">Qty</th>
+                    <th style="width: 18%;" class="text-right">Price</th>
+                    <th style="width: 22%;" class="text-right">Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -287,18 +320,21 @@ $items = $stmt->get_result();
                     $itemCount++;
                 ?>
                     <tr class="item-row">
-                        <td class="item-name">
-                            <strong><?php echo htmlspecialchars($item['product_name']); ?></strong>
+                        <td>
+                            <div class="item-name"><?php echo htmlspecialchars($item['product_name']); ?></div>
                             <?php if ($item['generic_name']): ?>
                                 <div class="item-details"><?php echo htmlspecialchars($item['generic_name']); ?></div>
                             <?php endif; ?>
-                            <?php if ($item['unit']): ?>
-                                <div class="item-details"><?php echo htmlspecialchars($item['unit']); ?></div>
-                            <?php endif; ?>
                         </td>
-                        <td class="item-qty"><?php echo $item['quantity']; ?></td>
-                        <td class="item-price"><?php echo number_format($item['unit_price'], 2); ?></td>
-                        <td class="item-total"><?php echo number_format($item['total_price'], 2); ?></td>
+                        <td class="text-center">
+                            <?php 
+                            // Display quantity with unit
+                            $qty = floatval($item['quantity']);
+                            echo $qty;
+                            ?>
+                        </td>
+                        <td class="text-right"><?php echo number_format($item['unit_price'], 2); ?></td>
+                        <td class="text-right"><?php echo number_format($item['total_price'], 2); ?></td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
@@ -306,42 +342,56 @@ $items = $stmt->get_result();
 
         <!-- Totals Section -->
         <div class="totals-section">
-            <div class="totals-row">
+            <div class="total-row">
                 <span>Subtotal:</span>
                 <span>Rs. <?php echo number_format($sale['total_amount'], 2); ?></span>
             </div>
             <?php if ($sale['discount'] > 0): ?>
-                <div class="totals-row">
+                <div class="total-row">
                     <span>Discount:</span>
                     <span>- Rs. <?php echo number_format($sale['discount'], 2); ?></span>
                 </div>
             <?php endif; ?>
-            <div class="totals-row grand-total">
+            <div class="total-row grand-total">
                 <span>TOTAL:</span>
                 <span>Rs. <?php echo number_format($sale['net_amount'], 2); ?></span>
             </div>
         </div>
 
+        <!-- Payment Details (for Cash only) -->
+        <?php if ($sale['payment_type'] === 'cash' && $paidAmount > 0): ?>
+            <div class="payment-section">
+                <div class="total-row">
+                    <span class="info-label">Paid:</span>
+                    <span>Rs. <?php echo number_format($paidAmount, 2); ?></span>
+                </div>
+                <div class="total-row">
+                    <span class="info-label">Change:</span>
+                    <span>Rs. <?php echo number_format($changeAmount, 2); ?></span>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <div class="divider"></div>
 
         <!-- Additional Info -->
         <div class="info-section" style="font-size: 10px;">
-            <div>Total Items: <?php echo $itemCount; ?></div>
-            <?php if ($sale['payment_type'] === 'cash'): ?>
-                <div>Payment Method: Cash</div>
-            <?php else: ?>
-                <div>Payment Method: Credit</div>
-                <div style="font-style: italic; color: #666;">Please settle the payment within 30 days</div>
+            <div class="info-row">
+                <span>Total Items:</span>
+                <span><?php echo $itemCount; ?></span>
+            </div>
+            <?php if ($sale['payment_type'] === 'credit'): ?>
+                <div style="margin-top: 5px; font-style: italic; color: #666;">
+                    * Credit Payment - Please settle within 30 days
+                </div>
             <?php endif; ?>
         </div>
 
         <div class="divider"></div>
 
-        <!-- Barcode (Sale ID) -->
+        <!-- Barcode -->
         <div class="barcode">
-            <div style="letter-spacing: 3px; font-size: 18px; font-weight: bold;">
-                *<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?>*
-            </div>
+            *<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?>*
         </div>
 
         <!-- Footer -->
@@ -349,39 +399,30 @@ $items = $stmt->get_result();
             <p class="thank-you">Thank You for Your Purchase!</p>
             <p>Please visit us again</p>
             <p style="margin-top: 10px; font-size: 10px;">
-                For inquiries or concerns, please contact us at:<br>
-                info@ayurvedapharmacy.lk | +94 77 123 4567
+                For inquiries: info@erundeniyaosu.lk<br>
+                Tel: +94 77 123 4567
             </p>
             <div class="divider" style="margin-top: 10px;"></div>
             <p style="font-size: 9px; margin-top: 10px;">
-                © <?php echo date('Y'); ?> Ayurvedic Pharmacy. All rights reserved.<br>
-                Goods once sold cannot be returned or exchanged.
+                © <?php echo date('Y'); ?> Ayurvedic Pharmacy<br>
+                All rights reserved<br>
+                Goods once sold cannot be returned
             </p>
         </div>
     </div>
 
     <script>
-        // Optional: Auto-print on load (uncomment if needed)
+        // Auto-print on load (optional)
         // window.onload = function() {
         //     window.print();
         // }
         
-        // Print and close
-        function printAndClose() {
-            window.print();
-            setTimeout(function() {
-                window.close();
-            }, 500);
-        }
-        
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            // Ctrl+P or Cmd+P to print
             if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
                 e.preventDefault();
                 window.print();
             }
-            // ESC to close
             if (e.key === 'Escape') {
                 window.close();
             }

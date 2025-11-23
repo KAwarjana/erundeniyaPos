@@ -1,14 +1,14 @@
 [data-bs-theme-color=theme-color-default] {
-  --bs-primary: #3a57e8;
+  --bs-primary: #077a16;
   --bs-primary-rgb: 58, 87, 232;
-  --bs-primary-bg-subtle: #d8ddfa;
+  --bs-primary-bg-subtle: #eaffed;
   --bs-primary-border-subtle: #b0bcf6;
   --bs-link-color-rgb: var(--bs-primary-rgb);
   --bs-primary-hover-bg: #2e46ba;
   --bs-primary-hover-border: #293da2;
   --bs-primary-active-bg: #2e46ba;
   --bs-primary-active-border: #293da2;
-  --bs-secondary: #001F4D;
+  --bs-secondary: #002010;
   --bs-secondary-rgb: 0, 31, 77;
   --bs-secondary-bg-subtle: #ccd2db;
   --bs-secondary-border-subtle: #99a5b8;
