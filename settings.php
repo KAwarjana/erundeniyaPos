@@ -1,6 +1,6 @@
 <?php
 require_once 'auth.php';
-Auth::requireAuth();
+Auth::requireAdmin(); // Only Admin can access settings
 
 $conn = getDBConnection();
 $userInfo = Auth::getUserInfo();
@@ -19,9 +19,9 @@ $users = $conn->query("SELECT u.*, r.role_name
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Settings | Ayurvedic Pharmacy</title>
+     <title>E. W. D. Erundeniya</title>
     
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">

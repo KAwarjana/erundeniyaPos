@@ -51,14 +51,19 @@ ORDER BY p.product_name");
                             <div class="header-title">
                                 <h4 class="card-title">Products Management</h4>
                             </div>
-                            <button class="btn btn-primary" onclick="showAddProductModal()">
-                                <i class="icon">
-                                    <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    </svg>
-                                </i>
-                                Add New Product
-                            </button>
+                            <div>
+                                <button class="btn btn-success me-2" onclick="exportProducts()">
+                                    📊 Export Products
+                                </button>
+                                <button class="btn btn-primary" onclick="showAddProductModal()">
+                                    <i class="icon">
+                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </i>
+                                    Add New Product
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -181,6 +186,10 @@ ORDER BY p.product_name");
             document.getElementById('productForm').reset();
             document.getElementById('productId').value = '';
             productModal.show();
+        }
+        
+        function exportProducts() {
+            window.location.href = 'export_products.php';
         }
 
         function editProduct(productId) {

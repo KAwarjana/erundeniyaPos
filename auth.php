@@ -16,6 +16,56 @@ class Auth {
         }
     }
     
+    // Check if user has specific role
+    public static function hasRole($roleId) {
+        if (!self::isLoggedIn()) {
+            return false;
+        }
+        
+        if (is_array($roleId)) {
+            return in_array($_SESSION['role_id'], $roleId);
+        }
+        
+        return $_SESSION['role_id'] == $roleId;
+    }
+    
+    // Require specific role (redirect if not authorized)
+    public static function requireRole($roleId, $redirectTo = 'dashBoard.php') {
+        self::requireAuth();
+        
+        if (is_array($roleId)) {
+            if (!in_array($_SESSION['role_id'], $roleId)) {
+                header("Location: " . $redirectTo);
+                exit();
+            }
+        } else {
+            if ($_SESSION['role_id'] != $roleId) {
+                header("Location: " . $redirectTo);
+                exit();
+            }
+        }
+    }
+    
+    // Check if user is admin
+    public static function isAdmin() {
+        return self::hasRole(1);
+    }
+    
+    // Check if user is manager
+    public static function isManager() {
+        return self::hasRole(2);
+    }
+    
+    // Check if user is cashier
+    public static function isCashier() {
+        return self::hasRole(3);
+    }
+    
+    // Require admin access
+    public static function requireAdmin() {
+        self::requireRole(1, 'dashBoard.php');
+    }
+    
     // Login user
     public static function login($username, $password) {
         $conn = getDBConnection();

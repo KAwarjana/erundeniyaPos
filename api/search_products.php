@@ -8,7 +8,7 @@ header('Content-Type: application/json');
 
 $query = $_GET['q'] ?? '';
 
-if (strlen($query) < 2) {
+if (strlen($query) < 1) { // Changed from 2 to 1 to search from first character
     echo json_encode([]);
     exit;
 }
@@ -16,7 +16,9 @@ if (strlen($query) < 2) {
 $conn = getDBConnection();
 
 $searchQuery = "%" . $conn->real_escape_string($query) . "%";
+$exactQuery = $conn->real_escape_string($query);
 
+// Modified SQL to include product_id search
 $sql = "SELECT 
             p.product_id,
             p.product_name,
@@ -28,14 +30,26 @@ $sql = "SELECT
             pb.quantity_in_stock
         FROM products p
         INNER JOIN product_batches pb ON p.product_id = pb.product_id
-        WHERE (p.product_name LIKE ? OR p.generic_name LIKE ?)
+        WHERE (
+            p.product_name LIKE ? 
+            OR p.generic_name LIKE ?
+            OR p.product_id = ?
+            OR CAST(p.product_id AS CHAR) LIKE ?
+        )
         AND pb.quantity_in_stock > 0
         AND pb.expiry_date > CURDATE()
-        ORDER BY p.product_name, pb.expiry_date
+        ORDER BY 
+            CASE 
+                WHEN p.product_id = ? THEN 1
+                WHEN p.product_name LIKE ? THEN 2
+                ELSE 3
+            END,
+            p.product_name, 
+            pb.expiry_date
         LIMIT 20";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ss", $searchQuery, $searchQuery);
+$stmt->bind_param("ssisss", $searchQuery, $searchQuery, $exactQuery, $searchQuery, $exactQuery, $searchQuery);
 $stmt->execute();
 $result = $stmt->get_result();
 

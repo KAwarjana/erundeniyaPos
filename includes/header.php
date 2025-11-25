@@ -1,14 +1,11 @@
 <?php
 $userInfo = Auth::getUserInfo();
+$isAdmin = Auth::isAdmin();
 ?>
 <div class="position-relative iq-banner">
     <nav class="nav navbar navbar-expand-xl navbar-light iq-navbar">
         <div class="container-fluid navbar-inner col-12" style="margin-right: 5px; padding-right: 0;">
             <div class="col-6">
-                <!-- <a href="dashBoard.php" class="navbar-brand">
-                    
-                <h4 class="logo-title">Erundeniya</h4>
-                </a> -->
             </div>
             <div class="sidebar-toggle" data-toggle="sidebar" data-active="true">
                 <i class="icon">
@@ -29,8 +26,12 @@ $userInfo = Auth::getUserInfo();
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     <li><a class="dropdown-item" href="profile.php">Profile</a></li>
-                    <li><a class="dropdown-item" href="settings.php">Settings</a></li>
-                    <li><hr class="dropdown-divider"></li>
+                    <?php if ($isAdmin): ?>
+                        <li><a class="dropdown-item" href="settings.php">Settings</a></li>
+                    <?php endif; ?>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li><a class="dropdown-item" href="auth.php?action=logout">Logout</a></li>
                 </ul>
             </div>

@@ -13,12 +13,21 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    
+
     if (empty($username) || empty($password)) {
         $error = 'Please enter both username and password';
     } else {
         if (Auth::login($username, $password)) {
-            header("Location: dashBoard.php");
+            // Redirect based on role
+            $roleId = $_SESSION['role_id'];
+
+            if ($roleId == 3) {
+                // Cashier - redirect to POS
+                header("Location: pos.php");
+            } else {
+                // Admin and Manager - redirect to Dashboard
+                header("Location: dashBoard.php");
+            }
             exit();
         } else {
             $error = 'Invalid username or password';
@@ -28,16 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Ayurvedic Pharmacy - Login</title>
-    
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <title>E. W. D. Erundeniya</title>
+
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
 </head>
+
 <body>
     <div class="wrapper">
         <section class="login-content">
@@ -47,33 +58,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="col-md-10">
                             <div class="card card-transparent shadow-none d-flex justify-content-center mb-0 auth-card">
                                 <div class="card-body">
-                                    <a href="#" class="navbar-brand d-flex align-items-center mb-3">
-                                        <h2 class="logo-title ms-3">Ayurvedic Pharmacy POS</h2>
-                                    </a>
+                                    <div style="width: 100%; justify-content: center; display: flex;">
+                                        <img src="assets/images/logoblack.png" style="width: 12rem;">
+                                    </div>
+                                    <!-- <h3 class="logo-title ms-3 text-center">E. W. D. Erundeniya</h3>
+                                    <h1 class="logo-title ms-3 text-center">හෙළ ඔසුසල</h1> -->
+                                    <br />
                                     <h2 class="mb-2 text-center">Sign In</h2>
                                     <p class="text-center">Login to access your account.</p>
-                                    
+
                                     <?php if (!empty($error)): ?>
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        <?php echo htmlspecialchars($error); ?>
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
+                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                            <?php echo htmlspecialchars($error); ?>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
                                     <?php endif; ?>
-                                    
+
                                     <form method="POST" action="">
                                         <div class="row">
                                             <div class="col-lg-12">
                                                 <div class="form-group">
                                                     <label for="username" class="form-label">Username</label>
-                                                    <input type="text" class="form-control" id="username" name="username" 
-                                                           placeholder="Enter username" required autofocus>
+                                                    <input type="text" class="form-control" id="username" name="username"
+                                                        placeholder="Enter username" required autofocus>
                                                 </div>
                                             </div>
                                             <div class="col-lg-12">
                                                 <div class="form-group">
                                                     <label for="password" class="form-label">Password</label>
-                                                    <input type="password" class="form-control" id="password" name="password" 
-                                                           placeholder="Enter password" required>
+                                                    <input type="password" class="form-control" id="password" name="password"
+                                                        placeholder="Enter password" required>
                                                 </div>
                                             </div>
                                             <div class="col-lg-12 d-flex justify-content-between">
@@ -98,9 +112,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </section>
     </div>
-    
+
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
     <script src="assets/js/hope-ui.js" defer></script>
 </body>
+
 </html>

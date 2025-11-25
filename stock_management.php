@@ -29,9 +29,9 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Stock Management | Ayurvedic Pharmacy</title>
+    <title>Stock Management | E. W. D. Erundeniya</title>
     
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
@@ -57,14 +57,25 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                             <div class="header-title">
                                 <h4 class="card-title">Stock Management - Product Batches</h4>
                             </div>
-                            <button class="btn btn-primary" onclick="showAddBatchModal()">
-                                <i class="icon">
-                                    <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    </svg>
-                                </i>
-                                Add New Batch
-                            </button>
+                            <div>
+                                <button class="btn btn-success me-2" onclick="exportStock()">
+                                    <i class="icon">
+                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 15V3M12 15L8 11M12 15L16 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 17L2.621 19.485C2.72915 19.9177 2.97882 20.3018 3.33033 20.5763C3.68184 20.8508 4.11501 20.9999 4.561 21H19.439C19.885 20.9999 20.3182 20.8508 20.6697 20.5763C21.0212 20.3018 21.2708 19.9177 21.379 19.485L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </i>
+                                    Export to CSV
+                                </button>
+                                <button class="btn btn-primary" onclick="showAddBatchModal()">
+                                    <i class="icon">
+                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </i>
+                                    Add New Batch
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -258,6 +269,34 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
     <script>
         const batchModal = new bootstrap.Modal(document.getElementById('batchModal'));
         const adjustmentModal = new bootstrap.Modal(document.getElementById('adjustmentModal'));
+
+        // Export stock function
+        function exportStock() {
+            Swal.fire({
+                title: 'Exporting...',
+                text: 'Preparing your stock report',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Open export URL in new window to download file
+            window.location.href = 'export_stockM.php';
+            
+            setTimeout(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Stock report exported successfully',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 1000);
+        }
 
         function showAddBatchModal() {
             document.getElementById('batchModalTitle').textContent = 'Add New Batch';

@@ -1,6 +1,6 @@
 <?php
 require_once 'auth.php';
-Auth::requireAuth();
+Auth::requireRole([1, 2, 3]); // Admin, Manager, and Cashier can access POS
 
 $conn = getDBConnection();
 $userInfo = Auth::getUserInfo();
@@ -319,7 +319,7 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                         <!-- Search Box -->
                         <div class="search-box">
                             <input type="text" class="billing-input" id="productSearch" 
-                                   placeholder="Search Your Item Here...">
+                                   placeholder="Search by name, ID, or barcode...">
                             <div id="searchResults" class="search-results"></div>
                         </div>
 
@@ -510,7 +510,7 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             clearTimeout(searchTimeout);
             const query = this.value.trim();
             
-            if (query.length < 2) {
+            if (query.length < 1) {
                 document.getElementById('searchResults').style.display = 'none';
                 return;
             }
@@ -542,9 +542,9 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             products.forEach(product => {
                 html += `
                     <div class="search-result-item" onclick='addToCart(${JSON.stringify(product).replace(/'/g, "&#39;")})'>
-                        <strong>${product.product_name}</strong>
+                        <strong>${product.product_name}</strong> <span class="badge bg-primary">ID: ${product.product_id}</span>
                         ${product.generic_name ? `<br><small class="text-muted">${product.generic_name}</small>` : ''}
-                        <br><small>Stock: ${product.quantity_in_stock} | Rs. ${parseFloat(product.selling_price).toFixed(2)}</small>
+                        <br><small>Stock: ${product.quantity_in_stock} | Rs. ${parseFloat(product.selling_price).toFixed(2)}/kg</small>
                     </div>
                 `;
             });

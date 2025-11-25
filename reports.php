@@ -114,6 +114,9 @@ ORDER BY pb.expiry_date ASC");
                                         </i>
                                         Print Report
                                     </button>
+                                    <button type="button" class="btn btn-info" onclick="exportStockReport()">
+                                        📊 Export Stock
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -290,5 +293,11 @@ ORDER BY pb.expiry_date ASC");
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
     <script src="assets/js/hope-ui.js" defer></script>
+    
+    <script>
+        function exportStockReport() {
+            window.location.href = 'export_stock.php';
+        }
+    </script>
 </body>
 </html>

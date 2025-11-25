@@ -257,8 +257,7 @@ $items = $stmt->get_result();
     <div class="receipt">
         <!-- Header -->
         <div class="header">
-            <h1>AYURVEDIC PHARMACY</h1>
-            <p>ErundeniyaOsu.lk</p>
+            <h1>E. W. D. එරුන්දෙනිය හෙළ ඔසුසල</h1>
             <p>Quality Ayurvedic Products & Medicines</p>
             <p>No. 123, Main Street, Negombo, Sri Lanka</p>
             <p>Tel: +94 31 222 3333 | +94 77 123 4567</p>
@@ -404,7 +403,7 @@ $items = $stmt->get_result();
             </p>
             <div class="divider" style="margin-top: 10px;"></div>
             <p style="font-size: 9px; margin-top: 10px;">
-                © <?php echo date('Y'); ?> Ayurvedic Pharmacy<br>
+                © <?php echo date('Y'); ?>E. W. D. එරුන්දෙනිය හෙළ ඔසුසල<br>
                 All rights reserved<br>
                 Goods once sold cannot be returned
             </p>

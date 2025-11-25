@@ -25,9 +25,9 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Purchases | Ayurvedic Pharmacy</title>
+    <title>E. W. D. Erundeniya</title>
     
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
