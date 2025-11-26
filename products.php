@@ -4,8 +4,12 @@ Auth::requireAuth();
 
 $conn = getDBConnection();
 
-// Get all products with total stock
-$products = $conn->query("SELECT 
+// Get filter parameters
+$stockStatus = $_GET['stock_status'] ?? '';
+$searchTerm = $_GET['search'] ?? '';
+
+// Build the query with filters
+$sql = "SELECT 
     p.product_id,
     p.product_name,
     p.generic_name,
@@ -14,9 +18,43 @@ $products = $conn->query("SELECT
     COALESCE(SUM(pb.quantity_in_stock), 0) as total_stock,
     COUNT(pb.batch_id) as batch_count
 FROM products p
-LEFT JOIN product_batches pb ON p.product_id = pb.product_id
-GROUP BY p.product_id
-ORDER BY p.product_name");
+LEFT JOIN product_batches pb ON p.product_id = pb.product_id";
+
+$whereClauses = [];
+$params = [];
+$types = "";
+
+if (!empty($searchTerm)) {
+    $whereClauses[] = "(p.product_name LIKE ? OR p.generic_name LIKE ?)";
+    $searchParam = "%$searchTerm%";
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $types .= "ss";
+}
+
+if (!empty($whereClauses)) {
+    $sql .= " WHERE " . implode(" AND ", $whereClauses);
+}
+
+$sql .= " GROUP BY p.product_id";
+
+// Apply stock status filter after grouping
+if ($stockStatus === 'out_of_stock') {
+    $sql .= " HAVING total_stock = 0";
+} elseif ($stockStatus === 'low_stock') {
+    $sql .= " HAVING total_stock > 0 AND total_stock <= p.reorder_level";
+} elseif ($stockStatus === 'in_stock') {
+    $sql .= " HAVING total_stock > p.reorder_level";
+}
+
+$sql .= " ORDER BY p.product_name";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$products = $stmt->get_result();
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
@@ -66,6 +104,29 @@ ORDER BY p.product_name");
                             </div>
                         </div>
                         <div class="card-body">
+                            <!-- Filters -->
+                            <form method="GET" class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Search Product</label>
+                                    <input type="text" class="form-control" name="search" 
+                                           placeholder="Product name or generic name" 
+                                           value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Stock Status</label>
+                                    <select class="form-select" name="stock_status">
+                                        <option value="">All Status</option>
+                                        <option value="in_stock" <?php echo $stockStatus === 'in_stock' ? 'selected' : ''; ?>>In Stock</option>
+                                        <option value="low_stock" <?php echo $stockStatus === 'low_stock' ? 'selected' : ''; ?>>Low Stock</option>
+                                        <option value="out_of_stock" <?php echo $stockStatus === 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                    <a href="products.php" class="btn btn-secondary">Reset</a>
+                                </div>
+                            </form>
+
                             <div class="table-responsive">
                                 <table class="table table-striped" id="productsTable">
                                     <thead>
@@ -189,7 +250,8 @@ ORDER BY p.product_name");
         }
         
         function exportProducts() {
-            window.location.href = 'export_products.php';
+            const urlParams = new URLSearchParams(window.location.search);
+            window.location.href = 'export_products.php?' + urlParams.toString();
         }
 
         function editProduct(productId) {

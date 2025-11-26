@@ -4,8 +4,13 @@ Auth::requireAuth();
 
 $conn = getDBConnection();
 
-// Get all product batches with product info
-$batches = $conn->query("SELECT 
+// Get filter parameters
+$statusFilter = $_GET['status_filter'] ?? '';
+$searchTerm = $_GET['search'] ?? '';
+$expiryFilter = $_GET['expiry_filter'] ?? '';
+
+// Build the query with filters
+$sql = "SELECT 
     pb.batch_id,
     pb.batch_no,
     pb.expiry_date,
@@ -19,7 +24,49 @@ $batches = $conn->query("SELECT
     DATEDIFF(pb.expiry_date, CURDATE()) as days_to_expiry
 FROM product_batches pb
 JOIN products p ON pb.product_id = p.product_id
-ORDER BY p.product_name, pb.expiry_date");
+WHERE 1=1";
+
+$params = [];
+$types = "";
+
+// Search filter
+if (!empty($searchTerm)) {
+    $sql .= " AND (p.product_name LIKE ? OR p.generic_name LIKE ? OR pb.batch_no LIKE ?)";
+    $searchParam = "%$searchTerm%";
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $types .= "sss";
+}
+
+// Status filter
+if ($statusFilter === 'out_of_stock') {
+    $sql .= " AND pb.quantity_in_stock = 0";
+} elseif ($statusFilter === 'low_stock') {
+    $sql .= " AND pb.quantity_in_stock > 0 AND pb.quantity_in_stock <= 10";
+} elseif ($statusFilter === 'in_stock') {
+    $sql .= " AND pb.quantity_in_stock > 10";
+}
+
+// Expiry filter
+if ($expiryFilter === 'expired') {
+    $sql .= " AND pb.expiry_date < CURDATE()";
+} elseif ($expiryFilter === 'expiring_soon') {
+    $sql .= " AND pb.expiry_date >= CURDATE() AND DATEDIFF(pb.expiry_date, CURDATE()) <= 30";
+} elseif ($expiryFilter === 'near_expiry') {
+    $sql .= " AND pb.expiry_date >= CURDATE() AND DATEDIFF(pb.expiry_date, CURDATE()) BETWEEN 31 AND 90";
+} elseif ($expiryFilter === 'good') {
+    $sql .= " AND pb.expiry_date >= CURDATE() AND DATEDIFF(pb.expiry_date, CURDATE()) > 90";
+}
+
+$sql .= " ORDER BY p.product_name, pb.expiry_date";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$batches = $stmt->get_result();
 
 // Get products for dropdown
 $products = $conn->query("SELECT product_id, product_name, generic_name FROM products ORDER BY product_name");
@@ -59,13 +106,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                             </div>
                             <div>
                                 <button class="btn btn-success me-2" onclick="exportStock()">
-                                    <i class="icon">
-                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 15V3M12 15L8 11M12 15L16 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M2 17L2.621 19.485C2.72915 19.9177 2.97882 20.3018 3.33033 20.5763C3.68184 20.8508 4.11501 20.9999 4.561 21H19.439C19.885 20.9999 20.3182 20.8508 20.6697 20.5763C21.0212 20.3018 21.2708 19.9177 21.379 19.485L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </i>
-                                    Export to CSV
+                                    📊 Export to CSV
                                 </button>
                                 <button class="btn btn-primary" onclick="showAddBatchModal()">
                                     <i class="icon">
@@ -78,6 +119,39 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                             </div>
                         </div>
                         <div class="card-body">
+                            <!-- Filters -->
+                            <form method="GET" class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Search</label>
+                                    <input type="text" class="form-control" name="search" 
+                                           placeholder="Product or batch number" 
+                                           value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Stock Status</label>
+                                    <select class="form-select" name="status_filter">
+                                        <option value="">All Status</option>
+                                        <option value="in_stock" <?php echo $statusFilter === 'in_stock' ? 'selected' : ''; ?>>In Stock</option>
+                                        <option value="low_stock" <?php echo $statusFilter === 'low_stock' ? 'selected' : ''; ?>>Low Stock</option>
+                                        <option value="out_of_stock" <?php echo $statusFilter === 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Expiry Status</label>
+                                    <select class="form-select" name="expiry_filter">
+                                        <option value="">All</option>
+                                        <option value="good" <?php echo $expiryFilter === 'good' ? 'selected' : ''; ?>>Good (90+ days)</option>
+                                        <option value="near_expiry" <?php echo $expiryFilter === 'near_expiry' ? 'selected' : ''; ?>>Near Expiry (31-90 days)</option>
+                                        <option value="expiring_soon" <?php echo $expiryFilter === 'expiring_soon' ? 'selected' : ''; ?>>Expiring Soon (≤30 days)</option>
+                                        <option value="expired" <?php echo $expiryFilter === 'expired' ? 'selected' : ''; ?>>Expired</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                    <a href="stock_management.php" class="btn btn-secondary">Reset</a>
+                                </div>
+                            </form>
+
                             <div class="table-responsive">
                                 <table class="table table-striped" id="stockTable">
                                     <thead>
@@ -270,7 +344,6 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
         const batchModal = new bootstrap.Modal(document.getElementById('batchModal'));
         const adjustmentModal = new bootstrap.Modal(document.getElementById('adjustmentModal'));
 
-        // Export stock function
         function exportStock() {
             Swal.fire({
                 title: 'Exporting...',
@@ -283,8 +356,8 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                 }
             });
             
-            // Open export URL in new window to download file
-            window.location.href = 'export_stockM.php';
+            const urlParams = new URLSearchParams(window.location.search);
+            window.location.href = 'export_stockM.php?' + urlParams.toString();
             
             setTimeout(() => {
                 Swal.close();

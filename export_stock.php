@@ -23,7 +23,7 @@ JOIN products p ON pb.product_id = p.product_id
 ORDER BY p.product_name, pb.expiry_date");
 
 // Set headers for CSV download
-$filename = "stock_report_" . date('Y-m-d') . ".csv";
+$filename = "stock_report_" . date('Y-m-d_His') . ".csv";
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 

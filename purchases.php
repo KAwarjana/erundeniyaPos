@@ -4,8 +4,13 @@ Auth::requireAuth();
 
 $conn = getDBConnection();
 
-// Get purchases
-$purchases = $conn->query("SELECT 
+// Get filter parameters
+$dateFrom = $_GET['date_from'] ?? date('Y-m-01');
+$dateTo = $_GET['date_to'] ?? date('Y-m-d');
+$supplierId = $_GET['supplier_id'] ?? '';
+
+// Build query with filters
+$sql = "SELECT 
     p.*,
     s.name as supplier_name,
     u.full_name as user_name,
@@ -14,8 +19,39 @@ FROM purchases p
 LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
 LEFT JOIN users u ON p.user_id = u.user_id
 LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id
-GROUP BY p.purchase_id
-ORDER BY p.purchase_date DESC");
+WHERE DATE(p.purchase_date) BETWEEN ? AND ?";
+
+$params = [$dateFrom, $dateTo];
+$types = "ss";
+
+if (!empty($supplierId)) {
+    $sql .= " AND p.supplier_id = ?";
+    $params[] = $supplierId;
+    $types .= "i";
+}
+
+$sql .= " GROUP BY p.purchase_id ORDER BY p.purchase_date DESC";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param($types, ...$params);
+$stmt->execute();
+$purchases = $stmt->get_result();
+
+// Get summary
+$summaryStmt = $conn->prepare("SELECT 
+    COUNT(*) as total_purchases,
+    SUM(total_amount) as total_amount
+FROM purchases 
+WHERE DATE(purchase_date) BETWEEN ? AND ?" . (!empty($supplierId) ? " AND supplier_id = ?" : ""));
+
+if (!empty($supplierId)) {
+    $summaryStmt->bind_param("ssi", $dateFrom, $dateTo, $supplierId);
+} else {
+    $summaryStmt->bind_param("ss", $dateFrom, $dateTo);
+}
+
+$summaryStmt->execute();
+$summary = $summaryStmt->get_result()->fetch_assoc();
 
 // Get suppliers for dropdown
 $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name");
@@ -43,6 +79,44 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
         <?php include 'includes/header.php'; ?>
         
         <div class="conatiner-fluid content-inner mt-n5 py-0">
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <p class="text-muted mb-1">Total Purchases</p>
+                                    <h4 class="mb-0"><?php echo number_format(intval($summary['total_purchases'] ?? 0)); ?></h4>
+                                </div>
+                                <div class="rounded-circle bg-soft-primary p-3">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3 9L12 2L21 9V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V9Z" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <p class="text-muted mb-1">Total Amount</p>
+                                    <h4 class="mb-0 text-success">Rs. <?php echo number_format(floatval($summary['total_amount'] ?? 0), 2); ?></h4>
+                                </div>
+                                <div class="rounded-circle bg-soft-success p-3">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2V22M17 5H9.5C7.01472 5 5 7.01472 5 9.5C5 11.9853 7.01472 14 9.5 14H14.5C16.9853 14 19 16.0147 19 18.5C19 20.9853 16.9853 23 14.5 23H6" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
@@ -55,6 +129,37 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
                             </div>
                         </div>
                         <div class="card-body">
+                            <!-- Filters -->
+                            <form method="GET" class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Date From</label>
+                                    <input type="date" class="form-control" name="date_from" value="<?php echo $dateFrom; ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Date To</label>
+                                    <input type="date" class="form-control" name="date_to" value="<?php echo $dateTo; ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Supplier</label>
+                                    <select class="form-select" name="supplier_id">
+                                        <option value="">All Suppliers</option>
+                                        <?php 
+                                        $suppliers->data_seek(0);
+                                        while ($supplier = $suppliers->fetch_assoc()): 
+                                        ?>
+                                            <option value="<?php echo $supplier['supplier_id']; ?>" 
+                                                    <?php echo $supplierId == $supplier['supplier_id'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($supplier['name']); ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                    <a href="purchases.php" class="btn btn-secondary">Reset</a>
+                                </div>
+                            </form>
+
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
@@ -84,8 +189,8 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
                                         <?php else: ?>
                                             <tr>
                                                 <td colspan="7" class="text-center py-5">
-                                                    <p class="text-muted">No purchases recorded yet</p>
-                                                    <small>Add new product batches in Stock Management to create purchase records</small>
+                                                    <p class="text-muted">No purchases found for the selected filters</p>
+                                                    <small>Try adjusting your filter criteria or add new product batches in Stock Management</small>
                                                 </td>
                                             </tr>
                                         <?php endif; ?>

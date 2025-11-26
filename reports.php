@@ -75,6 +75,101 @@ ORDER BY pb.expiry_date ASC");
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
+    
+    <style>
+        @media print {
+            /* Hide elements that shouldn't be printed */
+            #loading,
+            .sidebar,
+            .navbar,
+            .no-print,
+            .btn,
+            button,
+            .card-body form {
+                display: none !important;
+            }
+            
+            /* Adjust main content for print */
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .content-inner {
+                margin-top: 0 !important;
+            }
+            
+            /* Card adjustments */
+            .card {
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            
+            .card-header {
+                background-color: #f8f9fa !important;
+                border-bottom: 2px solid #000 !important;
+                padding: 10px 15px !important;
+            }
+            
+            /* Table styling for print */
+            table {
+                width: 100% !important;
+                font-size: 12px !important;
+            }
+            
+            table thead {
+                background-color: #f0f0f0 !important;
+            }
+            
+            table th, table td {
+                padding: 8px !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            /* Print header */
+            @page {
+                margin: 15mm;
+            }
+            
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .badge {
+                border: 1px solid #000 !important;
+                padding: 3px 6px !important;
+            }
+        }
+        
+        /* Print header styles */
+        .print-header {
+            display: none;
+        }
+        
+        @media print {
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 3px solid #000;
+                padding-bottom: 15px;
+            }
+            
+            .print-header h1 {
+                margin: 0;
+                font-size: 24px;
+                color: #000;
+            }
+            
+            .print-header p {
+                margin: 5px 0;
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="loading">
@@ -87,8 +182,15 @@ ORDER BY pb.expiry_date ASC");
         <?php include 'includes/header.php'; ?>
         
         <div class="conatiner-fluid content-inner mt-n5 py-0">
+            <!-- Print Header (only visible when printing) -->
+            <div class="print-header">
+                <h1>Ayurvedic Pharmacy - Sales Report</h1>
+                <p>Report Period: <?php echo date('M d, Y', strtotime($dateFrom)); ?> to <?php echo date('M d, Y', strtotime($dateTo)); ?></p>
+                <p>Generated on: <?php echo date('F d, Y h:i A'); ?></p>
+            </div>
+            
             <!-- Date Range Filter -->
-            <div class="row mb-4">
+            <div class="row mb-4 no-print">
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">

@@ -4,8 +4,12 @@ Auth::requireAuth();
 
 $conn = getDBConnection();
 
-// Get all products with stock summary
-$products = $conn->query("SELECT 
+// Get filter parameters
+$stockStatus = $_GET['stock_status'] ?? '';
+$searchTerm = $_GET['search'] ?? '';
+
+// Build the query with filters
+$sql = "SELECT 
     p.product_id,
     p.product_name,
     p.generic_name,
@@ -19,12 +23,46 @@ $products = $conn->query("SELECT
     COALESCE(MAX(pb.selling_price), 0) as max_selling_price,
     COALESCE(MIN(pb.expiry_date), NULL) as earliest_expiry
 FROM products p
-LEFT JOIN product_batches pb ON p.product_id = pb.product_id
-GROUP BY p.product_id
-ORDER BY p.product_name");
+LEFT JOIN product_batches pb ON p.product_id = pb.product_id";
+
+$whereClauses = [];
+$params = [];
+$types = "";
+
+if (!empty($searchTerm)) {
+    $whereClauses[] = "(p.product_name LIKE ? OR p.generic_name LIKE ?)";
+    $searchParam = "%$searchTerm%";
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $types .= "ss";
+}
+
+if (!empty($whereClauses)) {
+    $sql .= " WHERE " . implode(" AND ", $whereClauses);
+}
+
+$sql .= " GROUP BY p.product_id";
+
+// Apply stock status filter after grouping
+if ($stockStatus === 'out_of_stock') {
+    $sql .= " HAVING total_stock = 0";
+} elseif ($stockStatus === 'low_stock') {
+    $sql .= " HAVING total_stock > 0 AND total_stock <= p.reorder_level";
+} elseif ($stockStatus === 'in_stock') {
+    $sql .= " HAVING total_stock > p.reorder_level";
+}
+
+$sql .= " ORDER BY p.product_name";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$products = $stmt->get_result();
 
 // Set headers for CSV download
-$filename = "products_list_" . date('Y-m-d') . ".csv";
+$filename = "products_list_" . date('Y-m-d_His') . ".csv";
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 
@@ -95,6 +133,9 @@ fputcsv($output, ['Low Stock:', $lowStockCount]);
 fputcsv($output, ['Out of Stock:', $outOfStockCount]);
 fputcsv($output, []);
 fputcsv($output, ['Report Generated:', date('Y-m-d h:i A')]);
+if (!empty($searchTerm)) {
+    fputcsv($output, ['Search Filter:', $searchTerm]);
+}
 
 fclose($output);
 exit;
