@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 
 <body>

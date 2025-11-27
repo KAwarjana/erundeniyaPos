@@ -2146,3 +2146,289 @@ input:-webkit-autofill:active {
     -webkit-text-fill-color: white !important;
     transition: background-color 5000s ease-in-out 0s;
 }
+
+
+
+
+/* ============================================
+   BUTTON STYLES - Organized & Optimized
+   ============================================ */
+
+/* ===== BASE BUTTON STYLES ===== */
+.btn,
+button {
+    opacity: 1 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn:hover,
+.btn:hover svg,
+.btn:hover span,
+.btn:hover i,
+button:hover,
+button:hover svg,
+button:hover span,
+button:hover i {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* ===== SOLID BUTTONS ===== */
+.btn-primary {
+    background-color: #05a005ff !important;
+    border-color: #05a005ff !important;
+}
+
+.btn-primary:hover {
+    background-color: #048804 !important;
+    border-color: #048804 !important;
+}
+
+.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+.btn-success:hover {
+    background-color: #218838 !important;
+    border-color: #218838 !important;
+}
+
+.btn-warning {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800 !important;
+    border-color: #e0a800 !important;
+    color: #000 !important;
+}
+
+.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.btn-danger:hover {
+    background-color: #c82333 !important;
+    border-color: #c82333 !important;
+}
+
+.btn-info {
+    background-color: #17a2b8 !important;
+    border-color: #17a2b8 !important;
+}
+
+.btn-info:hover {
+    background-color: #138496 !important;
+    border-color: #138496 !important;
+}
+
+.btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268 !important;
+    border-color: #5a6268 !important;
+}
+
+/* ===== OUTLINE BUTTONS ===== */
+.btn-outline-primary {
+    color: #05a005ff !important;
+    border-color: #05a005ff !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    color: white !important;
+    background-color: #05a005ff !important;
+    border-color: #05a005ff !important;
+}
+
+.btn-outline-secondary {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-secondary:hover {
+    color: white !important;
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+/* ===== ICON BUTTONS ===== */
+.btn-icon {
+    background-color: transparent !important;
+    border: 1px solid !important;
+    padding: 0.375rem 0.5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+}
+
+/* Primary Icon Button */
+.btn-icon.btn-primary {
+    border-color: #05a005ff !important;
+}
+
+.btn-icon.btn-primary svg {
+    color: #05a005ff !important;
+    fill: #05a005ff !important;
+    stroke: #05a005ff !important;
+}
+
+.btn-icon.btn-primary:hover {
+    background-color: #05a005ff !important;
+}
+
+.btn-icon.btn-primary:hover svg {
+    color: white !important;
+    fill: white !important;
+    stroke: white !important;
+}
+
+/* Success Icon Button */
+.btn-icon.btn-success {
+    border-color: #28a745 !important;
+}
+
+.btn-icon.btn-success svg {
+    color: #28a745 !important;
+    fill: #28a745 !important;
+}
+
+.btn-icon.btn-success:hover {
+    background-color: #28a745 !important;
+}
+
+.btn-icon.btn-success:hover svg {
+    color: white !important;
+    fill: white !important;
+}
+
+/* Warning Icon Button */
+.btn-icon.btn-warning {
+    border-color: #ffc107 !important;
+}
+
+.btn-icon.btn-warning svg {
+    color: #ffc107 !important;
+    fill: #ffc107 !important;
+    stroke: #ffc107 !important;
+}
+
+.btn-icon.btn-warning:hover {
+    background-color: #ffc107 !important;
+}
+
+.btn-icon.btn-warning:hover svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #000 !important;
+}
+
+/* Danger Icon Button */
+.btn-icon.btn-danger {
+    border-color: #dc3545 !important;
+}
+
+.btn-icon.btn-danger svg {
+    color: #dc3545 !important;
+    fill: #dc3545 !important;
+    stroke: #dc3545 !important;
+}
+
+.btn-icon.btn-danger:hover {
+    background-color: #dc3545 !important;
+}
+
+.btn-icon.btn-danger:hover svg {
+    color: white !important;
+    fill: white !important;
+    stroke: white !important;
+}
+
+/* Info Icon Button */
+.btn-icon.btn-info {
+    border-color: #17a2b8 !important;
+    background-color: transparent !important;
+}
+
+.btn-icon.btn-info svg {
+    color: #17a2b8 !important;
+    fill: #17a2b8 !important;
+    filter: drop-shadow(0 1px 2px rgba(23, 162, 184, 0.3));
+}
+
+.btn-icon.btn-info:hover {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+.btn-icon.btn-info:hover svg {
+    color: white !important;
+    fill: white !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* ===== SVG ICONS ===== */
+.btn svg,
+button svg {
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: 20px !important;
+    height: 20px !important;
+    transition: all 0.3s ease !important;
+}
+
+/* ===== DISABLED BUTTONS ===== */
+.btn:disabled,
+.btn.disabled,
+button:disabled,
+button.disabled {
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+}
+
+/* ===== MODAL BUTTONS ===== */
+.modal-footer .btn,
+.modal-header .btn-close {
+    opacity: 1 !important;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 0.75 !important;
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ===== CARD HEADER BUTTONS ===== */
+.card-header .btn {
+    opacity: 1 !important;
+}
+
+/* ===== TABLE ACTION BUTTONS ===== */
+table .btn-icon,
+.table .btn-icon {
+    transform: scale(1);
+}
+
+table .btn-icon:hover,
+.table .btn-icon:hover {
+    transform: scale(1.1) !important;
+}
+
+/* ===== PRINT MEDIA ===== */
+@media print {
+    .btn,
+    button {
+        display: none !important;
+    }
+}

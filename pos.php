@@ -13,25 +13,24 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>POS | Ayurvedic Pharmacy</title>
+    <title>E. W. D. Erundeniya</title>
     
-    <link rel="shortcut icon" href="assets/images/logo.png">
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
     
     <style>
+        /* Mobile-first responsive styles - similar to sales_history.php */
         .pos-container {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
-            margin-top: -80px;
+            margin-top: 0;
         }
         
-        @media (max-width: 1200px) {
+        @media (max-width: 992px) {
             .pos-container {
-                grid-template-columns: 1fr;
+                margin-top: 0;
             }
         }
         
@@ -40,6 +39,13 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
+        }
+        
+        @media (max-width: 576px) {
+            .billing-card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
         }
         
         .billing-input {
@@ -55,6 +61,13 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             border-radius: 10px;
             padding: 20px;
             min-height: 400px;
+        }
+        
+        @media (max-width: 576px) {
+            .items-section {
+                padding: 15px;
+                min-height: 300px;
+            }
         }
         
         .search-box {
@@ -88,47 +101,23 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             background-color: #f8f9fa;
         }
         
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .items-table th {
-            background: #f8f9fa;
-            padding: 12px 8px;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid #dee2e6;
-            font-size: 14px;
-        }
-        
-        .items-table td {
-            padding: 12px 8px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-        }
-        
-        .item-input {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-align: center;
-        }
-        
-        .unit-select {
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
         .invoice-preview {
             background: white;
             border-radius: 10px;
             padding: 25px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 20px;
+        }
+        
+        /* @media (max-width: 992px) {
+            .invoice-preview {
+                margin-top: 20px;
+            }
+        } */
+        
+        @media (max-width: 576px) {
+            .invoice-preview {
+                padding: 15px;
+            }
         }
         
         .invoice-header {
@@ -152,32 +141,18 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             font-size: 13px;
         }
         
+        @media (max-width: 576px) {
+            .invoice-details {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
         .invoice-detail-group label {
             display: block;
             font-weight: 600;
             margin-bottom: 5px;
             color: #666;
-        }
-        
-        .invoice-items {
-            margin-top: 20px;
-        }
-        
-        .invoice-items table {
-            width: 100%;
-            font-size: 12px;
-        }
-        
-        .invoice-items th {
-            background: #f8f9fa;
-            padding: 8px 5px;
-            text-align: left;
-            border-bottom: 2px solid #dee2e6;
-        }
-        
-        .invoice-items td {
-            padding: 8px 5px;
-            border-bottom: 1px solid #f0f0f0;
         }
         
         .invoice-totals {
@@ -224,31 +199,49 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             color: white;
         }
         
-        .btn-save:hover {
-            background: #218838;
-        }
-        
         .btn-cancel {
             background: #6c757d;
             color: white;
         }
         
-        .btn-cancel:hover {
-            background: #5a6268;
+        /* Responsive table improvements */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
-        .remove-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
+        @media (max-width: 768px) {
+            .table-responsive table {
+                font-size: 12px;
+            }
         }
         
-        .remove-btn:hover {
-            background: #c82333;
+        @media (max-width: 576px) {
+            .table-responsive table {
+                font-size: 11px;
+            }
+        }
+        
+        /* Mobile-specific adjustments */
+        .mb-mobile-2 {
+            margin-bottom: 0.5rem !important;
+        }
+        
+        @media (min-width: 768px) {
+            .mb-mobile-2 {
+                margin-bottom: 0 !important;
+            }
+        }
+        
+        /* Responsive grid adjustments */
+        .col-stack-mobile {
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .col-stack-mobile {
+                width: auto;
+            }
         }
     </style>
 </head>
@@ -266,179 +259,181 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
         
         <div class="conatiner-fluid content-inner mt-n5 py-0">
             <div class="pos-container">
-                <!-- Left Side - Billing & Items -->
-                <div>
-                    <!-- Billing Details -->
-                    <div class="billing-card">
-                        <h5 class="mb-3">Billing Details</h5>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label><strong>Billing From</strong></label>
-                                <input type="text" class="billing-input" id="billingFrom" value="<?php echo htmlspecialchars($userInfo['full_name']); ?>" readonly>
+                <div class="row">
+                    <!-- Left Side - Billing & Items -->
+                    <div class="col-12 col-lg-8">
+                        <!-- Billing Details -->
+                        <div class="billing-card">
+                            <h5 class="mb-3">Billing Details</h5>
+                            <div class="row">
+                                <div class="col-12 col-md-6 mb-mobile-2">
+                                    <label><strong>Billing From</strong></label>
+                                    <input type="text" class="billing-input form-control" id="billingFrom" value="<?php echo htmlspecialchars($userInfo['full_name']); ?>" readonly>
+                                </div>
+                                <div class="col-12 col-md-6 mb-mobile-2">
+                                    <label><strong>Customer Type</strong></label>
+                                    <select class="billing-input form-select" id="customerType" onchange="toggleCustomerInput()">
+                                        <option value="walkin">Walk-in Customer</option>
+                                        <option value="existing">Existing Customer</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label><strong>Customer Type</strong></label>
-                                <select class="billing-input" id="customerType" onchange="toggleCustomerInput()">
-                                    <option value="walkin">Walk-in Customer</option>
-                                    <option value="existing">Existing Customer</option>
-                                </select>
+                            <div class="row mt-2">
+                                <div class="col-12 col-md-6 mb-mobile-2">
+                                    <label><strong>Customer Name</strong></label>
+                                    <input type="text" class="billing-input form-control" id="customerName" 
+                                           placeholder="Enter customer name (optional)" 
+                                           style="display: block;">
+                                    
+                                    <select class="billing-input form-select" id="customerId" style="display: none;" onchange="loadCustomerDetails()">
+                                        <option value="">Select Customer</option>
+                                        <?php 
+                                        $customers->data_seek(0);
+                                        while ($customer = $customers->fetch_assoc()): 
+                                        ?>
+                                            <option value="<?php echo $customer['customer_id']; ?>" 
+                                                    data-contact="<?php echo htmlspecialchars($customer['contact_no']); ?>">
+                                                <?php echo htmlspecialchars($customer['name']); ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6 mb-mobile-2">
+                                    <label><strong>Mobile Number</strong></label>
+                                    <input type="text" class="billing-input form-control" id="customerMobile" 
+                                           placeholder="Enter mobile number (optional)">
+                                </div>
                             </div>
                         </div>
-                        <div class="row mt-2">
-                            <div class="col-md-6">
-                                <label><strong>Customer Name</strong></label>
-                                <input type="text" class="billing-input" id="customerName" 
-                                       placeholder="Enter customer name (optional)" 
-                                       style="display: block;">
-                                
-                                <select class="billing-input" id="customerId" style="display: none;" onchange="loadCustomerDetails()">
-                                    <option value="">Select Customer</option>
-                                    <?php 
-                                    $customers->data_seek(0);
-                                    while ($customer = $customers->fetch_assoc()): 
-                                    ?>
-                                        <option value="<?php echo $customer['customer_id']; ?>" 
-                                                data-contact="<?php echo htmlspecialchars($customer['contact_no']); ?>">
-                                            <?php echo htmlspecialchars($customer['name']); ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
+
+                        <!-- Items Section -->
+                        <div class="items-section">
+                            <h5 class="mb-3">Items</h5>
+                            
+                            <!-- Search Box -->
+                            <div class="search-box">
+                                <input type="text" class="billing-input form-control" id="productSearch" 
+                                       placeholder="Search by name, ID, or barcode...">
+                                <div id="searchResults" class="search-results"></div>
                             </div>
-                            <div class="col-md-6">
-                                <label><strong>Mobile Number</strong></label>
-                                <input type="text" class="billing-input" id="customerMobile" 
-                                       placeholder="Enter mobile number (optional)">
+
+                            <!-- Items Table -->
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;">#</th>
+                                            <th style="width: 35%;">ITEM NAME</th>
+                                            <th style="width: 15%;">UNIT PRICE</th>
+                                            <th style="width: 15%;">QUANTITY</th>
+                                            <th style="width: 10%;">UNIT</th>
+                                            <th style="width: 15%;">NET AMOUNT</th>
+                                            <th style="width: 5%;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cartItems">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                No items added yet. Search and add products above.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Items Section -->
-                    <div class="items-section">
-                        <h5 class="mb-3">Items</h5>
-                        
-                        <!-- Search Box -->
-                        <div class="search-box">
-                            <input type="text" class="billing-input" id="productSearch" 
-                                   placeholder="Search by name, ID, or barcode...">
-                            <div id="searchResults" class="search-results"></div>
-                        </div>
+                    <!-- Right Side - Invoice Preview -->
+                    <div class="col-12 col-lg-4">
+                        <div class="invoice-preview">
+                            <div class="invoice-header">
+                                <h4>ErundeniyaOsu.lk</h4>
+                                <p style="margin: 5px 0; font-size: 12px;">Address of the hospital</p>
+                                <p style="margin: 0; font-size: 12px;">Tel: 0000000000</p>
+                            </div>
 
-                        <!-- Items Table -->
-                        <div class="table-responsive">
-                            <table class="items-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 5%;">#</th>
-                                        <th style="width: 35%;">ITEM NAME</th>
-                                        <th style="width: 15%;">UNIT PRICE</th>
-                                        <th style="width: 15%;">QUANTITY</th>
-                                        <th style="width: 10%;">UNIT</th>
-                                        <th style="width: 15%;">NET AMOUNT</th>
-                                        <th style="width: 5%;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cartItems">
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
-                                            No items added yet. Search and add products above.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side - Invoice Preview -->
-                <div>
-                    <div class="invoice-preview">
-                        <div class="invoice-header">
-                            <h4>ErundeniyaOsu.lk</h4>
-                            <p style="margin: 5px 0; font-size: 12px;">Address of the hospital</p>
-                            <p style="margin: 0; font-size: 12px;">Tel: 0000000000</p>
-                        </div>
-
-                        <div class="invoice-details">
-                            <div>
-                                <div class="invoice-detail-group">
-                                    <label>Invoice date</label>
-                                    <div id="invoiceDate"><?php echo date('M jS, Y'); ?></div>
+                            <div class="invoice-details">
+                                <div>
+                                    <div class="invoice-detail-group">
+                                        <label>Invoice date</label>
+                                        <div id="invoiceDate"><?php echo date('M jS, Y'); ?></div>
+                                    </div>
+                                    <div class="invoice-detail-group mt-2">
+                                        <label>Invoice number</label>
+                                        <div id="invoiceNumber">00000000</div>
+                                    </div>
                                 </div>
-                                <div class="invoice-detail-group mt-2">
-                                    <label>Invoice number</label>
-                                    <div id="invoiceNumber">00000000</div>
+                                <div>
+                                    <div class="invoice-detail-group">
+                                        <label>User</label>
+                                        <div id="invoiceUser"><?php echo htmlspecialchars($userInfo['full_name']); ?></div>
+                                    </div>
+                                    <div class="invoice-detail-group mt-2">
+                                        <label>Time</label>
+                                        <div id="invoiceTime"><?php echo date('h:i A'); ?></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <div class="invoice-detail-group">
-                                    <label>User</label>
-                                    <div id="invoiceUser"><?php echo htmlspecialchars($userInfo['full_name']); ?></div>
+
+                            <!-- Invoice Items -->
+                            <div class="invoice-items">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Qty</th>
+                                            <th>Unit</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invoiceItemsList">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">No items</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Totals -->
+                            <div class="invoice-totals">
+                                <div class="total-row">
+                                    <span>Net total</span>
+                                    <span id="netTotal">0.00</span>
                                 </div>
-                                <div class="invoice-detail-group mt-2">
-                                    <label>Time</label>
-                                    <div id="invoiceTime"><?php echo date('h:i A'); ?></div>
+                                <div class="total-row">
+                                    <span>Discount</span>
+                                    <span>
+                                        <input type="number" id="discount" class="form-control form-control-sm d-inline-block" value="0" min="0" step="0.01" 
+                                               style="width: 80px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; text-align: right;"
+                                               onchange="updateTotals()">
+                                    </span>
+                                </div>
+                                <div class="total-row grand-total">
+                                    <span>TOTAL</span>
+                                    <span id="grandTotal">0.00</span>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Invoice Items -->
-                        <div class="invoice-items">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Item</th>
-                                        <th>Qty</th>
-                                        <th>Unit</th>
-                                        <th>Price</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="invoiceItemsList">
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">No items</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                            <!-- Payment Section -->
+                            <div class="payment-section">
+                                <label><strong>Payment Method</strong></label>
+                                <select class="billing-input form-select mb-3" id="paymentMethod">
+                                    <option value="cash">Cash</option>
+                                    <option value="credit">Credit</option>
+                                </select>
 
-                        <!-- Totals -->
-                        <div class="invoice-totals">
-                            <div class="total-row">
-                                <span>Net total</span>
-                                <span id="netTotal">0.00</span>
+                                <div class="mb-3" id="cashPaymentSection">
+                                    <label><strong>Paid</strong></label>
+                                    <input type="number" class="billing-input form-control mb-2" id="paidAmount" value="0" min="0" step="0.01" onchange="calculateChange()">
+                                    
+                                    <label><strong>Change</strong></label>
+                                    <input type="text" class="billing-input form-control" id="changeAmount" value="0.00" readonly>
+                                </div>
+
+                                <button class="btn-action btn-save btn btn-success mb-2" onclick="saveInvoice()">Save Invoice</button>
+                                <button class="btn-action btn-cancel btn btn-secondary" onclick="clearAll()">Cancel</button>
                             </div>
-                            <div class="total-row">
-                                <span>Discount</span>
-                                <span>
-                                    <input type="number" id="discount" value="0" min="0" step="0.01" 
-                                           style="width: 80px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; text-align: right;"
-                                           onchange="updateTotals()">
-                                </span>
-                            </div>
-                            <div class="total-row grand-total">
-                                <span>TOTAL</span>
-                                <span id="grandTotal">0.00</span>
-                            </div>
-                        </div>
-
-                        <!-- Payment Section -->
-                        <div class="payment-section">
-                            <label><strong>Payment Method</strong></label>
-                            <select class="billing-input" id="paymentMethod">
-                                <option value="cash">Cash</option>
-                                <option value="credit">Credit</option>
-                            </select>
-
-                            <div class="mt-3" id="cashPaymentSection">
-                                <label><strong>Paid</strong></label>
-                                <input type="number" class="billing-input" id="paidAmount" value="0" min="0" step="0.01" onchange="calculateChange()">
-                                
-                                <label><strong>Change</strong></label>
-                                <input type="text" class="billing-input" id="changeAmount" value="0.00" readonly>
-                            </div>
-
-                            <button class="btn-action btn-save" onclick="saveInvoice()">Save Invoice</button>
-                            <button class="btn-action btn-cancel" onclick="clearAll()">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -569,9 +564,9 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                     product_id: product.product_id,
                     product_name: product.product_name,
                     batch_no: product.batch_no,
-                    price_per_kg: parseFloat(product.selling_price), // Store as per kg price
-                    quantity: 1, // Default 1 kg
-                    unit: 'kg', // Default unit kg
+                    price_per_kg: parseFloat(product.selling_price),
+                    quantity: 1,
+                    unit: 'kg',
                     max_stock: product.quantity_in_stock
                 });
             }
@@ -585,19 +580,18 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
         function calculatePrice(item) {
             let pricePerUnit = item.price_per_kg;
             
-            // Convert price based on unit
             switch(item.unit) {
                 case 'g':
-                    pricePerUnit = item.price_per_kg / 1000; // Price per gram
+                    pricePerUnit = item.price_per_kg / 1000;
                     break;
                 case 'kg':
-                    pricePerUnit = item.price_per_kg; // Price per kg
+                    pricePerUnit = item.price_per_kg;
                     break;
                 case 'ml':
-                    pricePerUnit = item.price_per_kg / 1000; // Assume same as gram
+                    pricePerUnit = item.price_per_kg / 1000;
                     break;
                 case 'bottle':
-                    pricePerUnit = item.price_per_kg; // Assume bottle = 1 unit
+                    pricePerUnit = item.price_per_kg;
                     break;
             }
             
@@ -638,7 +632,6 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                 const unitPrice = getUnitPrice(item);
                 const itemTotal = calculatePrice(item);
                 
-                // Show appropriate placeholder based on unit
                 let qtyPlaceholder = '';
                 switch(item.unit) {
                     case 'g': qtyPlaceholder = 'e.g., 250 (250g)'; break;
@@ -656,13 +649,13 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                         </td>
                         <td>Rs. ${unitPrice.toFixed(4)}</td>
                         <td>
-                            <input type="number" class="item-input" value="${item.quantity}" 
+                            <input type="number" class="item-input form-control form-control-sm" value="${item.quantity}" 
                                    min="0.001" step="any"
                                    placeholder="${qtyPlaceholder}"
                                    onchange="updateQuantity(${index}, this.value)">
                         </td>
                         <td>
-                            <select class="unit-select" onchange="updateUnit(${index}, this.value)">
+                            <select class="unit-select form-select form-select-sm" onchange="updateUnit(${index}, this.value)">
                                 <option value="g" ${item.unit === 'g' ? 'selected' : ''}>g</option>
                                 <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>kg</option>
                                 <option value="ml" ${item.unit === 'ml' ? 'selected' : ''}>ml</option>
@@ -671,7 +664,7 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                         </td>
                         <td>Rs. ${itemTotal.toFixed(2)}</td>
                         <td>
-                            <button class="remove-btn" onclick="removeFromCart(${index})">✕</button>
+                            <button class="remove-btn btn btn-sm btn-danger" onclick="removeFromCart(${index})">✕</button>
                         </td>
                     </tr>
                 `;
@@ -702,10 +695,9 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                 return;
             }
 
-            // Check stock based on unit
             let stockInSelectedUnit = item.max_stock;
             if (item.unit === 'g' || item.unit === 'ml') {
-                stockInSelectedUnit = item.max_stock * 1000; // Convert kg to g/ml
+                stockInSelectedUnit = item.max_stock * 1000;
             }
 
             if (quantity > stockInSelectedUnit) {
@@ -722,7 +714,6 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
             const item = cart[index];
             const oldUnit = item.unit;
             
-            // Convert quantity when unit changes
             if (oldUnit !== unit) {
                 if (oldUnit === 'kg' && unit === 'g') {
                     item.quantity = item.quantity * 1000;
@@ -838,7 +829,6 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                 }
             });
 
-            // Get payment details
             const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
             const changeAmount = parseFloat(document.getElementById('changeAmount').value) || 0;
 
@@ -871,13 +861,11 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                         icon: 'success',
                         confirmButtonColor: '#28a745'
                     }).then(() => {
-                        // Print invoice with payment details
                         const printUrl = 'print_receipt.php?sale_id=' + result.sale_id + 
                                        '&paid=' + paidAmount + 
                                        '&change=' + changeAmount;
                         window.open(printUrl, '_blank');
                         
-                        // Clear cart
                         clearAll();
                         invoiceCounter++;
                         document.getElementById('invoiceNumber').textContent = String(invoiceCounter).padStart(8, '0');

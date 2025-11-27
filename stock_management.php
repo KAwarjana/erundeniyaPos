@@ -73,17 +73,20 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Stock Management | E. W. D. Erundeniya</title>
-    
+    <title>E. W. D. Erundeniya</title>
+
     <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
+
 <body>
     <div id="loading">
         <div class="loader simple-loader">
@@ -95,27 +98,35 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
 
     <main class="main-content">
         <?php include 'includes/header.php'; ?>
-        
+
         <div class="conatiner-fluid content-inner mt-n5 py-0">
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <div class="header-title">
-                                <h4 class="card-title">Stock Management - Product Batches</h4>
-                            </div>
-                            <div>
-                                <button class="btn btn-success me-2" onclick="exportStock()">
-                                    📊 Export to CSV
-                                </button>
-                                <button class="btn btn-primary" onclick="showAddBatchModal()">
-                                    <i class="icon">
-                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                        </svg>
-                                    </i>
-                                    Add New Batch
-                                </button>
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-12 col-sm-auto mb-2 mb-sm-0">
+                                    <h4 class="card-title mb-0">Stock Management - Product Batches</h4>
+                                </div>
+
+                                <div class="col"></div>
+
+                                <!-- buttons -->
+                                <div class="col-12 col-sm-auto mt-sm-2">
+                                    <div class="d-flex flex-column flex-sm-row gap-2">
+                                        <button class="btn btn-success w-100 w-sm-auto text-nowrap" onclick="exportStock()">
+                                            📊 Export to CSV
+                                        </button>
+                                        <button class="btn btn-primary w-100 w-sm-auto text-nowrap" onclick="showAddBatchModal()">
+                                            <i class="icon">
+                                                <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                </svg>
+                                            </i>
+                                            Add New Batch
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -123,9 +134,9 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                             <form method="GET" class="row g-3 mb-4">
                                 <div class="col-md-3">
                                     <label class="form-label">Search</label>
-                                    <input type="text" class="form-control" name="search" 
-                                           placeholder="Product or batch number" 
-                                           value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                    <input type="text" class="form-control" name="search"
+                                        placeholder="Product or batch number"
+                                        value="<?php echo htmlspecialchars($searchTerm); ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Stock Status</label>
@@ -171,7 +182,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                             <?php
                                             $statusBadge = 'success';
                                             $statusText = 'Good';
-                                            
+
                                             if ($batch['days_to_expiry'] < 0) {
                                                 $statusBadge = 'dark';
                                                 $statusText = 'Expired';
@@ -182,7 +193,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                                 $statusBadge = 'warning';
                                                 $statusText = 'Near Expiry';
                                             }
-                                            
+
                                             if ($batch['quantity_in_stock'] == 0) {
                                                 $statusBadge = 'secondary';
                                                 $statusText = 'Out of Stock';
@@ -207,7 +218,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                                 <td>
                                                     <button class="btn btn-sm btn-icon btn-info" onclick="adjustStock(<?php echo $batch['batch_id']; ?>, '<?php echo htmlspecialchars($batch['product_name']); ?>', '<?php echo htmlspecialchars($batch['batch_no']); ?>', <?php echo $batch['quantity_in_stock']; ?>)" title="Adjust Stock">
                                                         <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                                                         </svg>
                                                     </button>
                                                     <button class="btn btn-sm btn-icon btn-warning" onclick="editBatch(<?php echo $batch['batch_id']; ?>)" title="Edit">
@@ -253,9 +264,9 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                             <label for="productId" class="form-label">Product *</label>
                             <select class="form-select" id="productId" name="product_id" required>
                                 <option value="">Select Product</option>
-                                <?php 
+                                <?php
                                 $products->data_seek(0);
-                                while ($product = $products->fetch_assoc()): 
+                                while ($product = $products->fetch_assoc()):
                                 ?>
                                     <option value="<?php echo $product['product_id']; ?>">
                                         <?php echo htmlspecialchars($product['product_name']); ?>
@@ -355,10 +366,10 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                     Swal.showLoading();
                 }
             });
-            
+
             const urlParams = new URLSearchParams(window.location.search);
             window.location.href = 'export_stockM.php?' + urlParams.toString();
-            
+
             setTimeout(() => {
                 Swal.close();
                 Swal.fire({
@@ -403,19 +414,19 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
             const formData = new FormData(form);
 
             fetch('api/save_batch.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
 
         function deleteBatch(batchId) {
@@ -430,20 +441,24 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch('api/delete_batch.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ batch_id: batchId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Deleted!', data.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                batch_id: batchId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
                 }
             });
         }
@@ -466,20 +481,21 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
             const formData = new FormData(form);
 
             fetch('api/save_adjustment.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
     </script>
 </body>
+
 </html>

@@ -14,43 +14,56 @@ ORDER BY c.name");
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>E. W. D. Erundeniya</title>
-    
+
     <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
+
 <body>
     <div id="loading">
-        <div class="loader simple-loader"><div class="loader-body"></div></div>
+        <div class="loader simple-loader">
+            <div class="loader-body"></div>
+        </div>
     </div>
 
     <?php include 'includes/sidebar.php'; ?>
 
     <main class="main-content">
         <?php include 'includes/header.php'; ?>
-        
+
         <div class="conatiner-fluid content-inner mt-n5 py-0">
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <div class="header-title">
-                                <h4 class="card-title">Customers Management</h4>
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-12 col-sm-auto mb-2 mb-sm-0">
+                                    <h4 class="card-title mb-0">Customers Management</h4>
+                                </div>
+
+                                <div class="col"></div>
+
+                                <!-- button -->
+                                <div class="col-12 col-sm-auto mt-sm-2">
+                                    <button class="btn btn-primary w-sm-auto text-nowrap" onclick="showAddCustomerModal()">
+                                        <i class="icon">
+                                            <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                            </svg>
+                                        </i>
+                                        Add New Customer
+                                    </button>
+                                </div>
                             </div>
-                            <button class="btn btn-primary" onclick="showAddCustomerModal()">
-                                <i class="icon">
-                                    <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    </svg>
-                                </i>
-                                Add New Customer
-                            </button>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -87,6 +100,7 @@ ORDER BY c.name");
                                                     <button class="btn btn-sm btn-icon btn-danger" onclick="deleteCustomer(<?php echo $customer['customer_id']; ?>)" title="Delete">
                                                         <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                            <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                         </svg>
                                                     </button>
                                                 </td>
@@ -177,17 +191,17 @@ ORDER BY c.name");
             const formData = new FormData(form);
 
             fetch('api/save_customer.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
 
         function deleteCustomer(customerId) {
@@ -201,21 +215,26 @@ ORDER BY c.name");
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch('api/delete_customer.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ customer_id: customerId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                customer_id: customerId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
                 }
             });
         }
     </script>
 </body>
+
 </html>

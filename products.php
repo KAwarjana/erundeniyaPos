@@ -58,17 +58,20 @@ $products = $stmt->get_result();
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Products | Ayurvedic Pharmacy</title>
-    
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <title>E. W. D. Erundeniya</title>
+
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
+
 <body>
     <div id="loading">
         <div class="loader simple-loader">
@@ -80,27 +83,35 @@ $products = $stmt->get_result();
 
     <main class="main-content">
         <?php include 'includes/header.php'; ?>
-        
+
         <div class="conatiner-fluid content-inner mt-n5 py-0">
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <div class="header-title">
-                                <h4 class="card-title">Products Management</h4>
-                            </div>
-                            <div>
-                                <button class="btn btn-success me-2" onclick="exportProducts()">
-                                    📊 Export Products
-                                </button>
-                                <button class="btn btn-primary" onclick="showAddProductModal()">
-                                    <i class="icon">
-                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                        </svg>
-                                    </i>
-                                    Add New Product
-                                </button>
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-12 col-sm-auto mb-2 mb-sm-0">
+                                    <h4 class="card-title mb-0">Products Management</h4>
+                                </div>
+
+                                <div class="col"></div>
+
+                                <!-- buttons -->
+                                <div class="col-sm-auto mt-sm-2">
+                                    <div class="d-flex flex-column flex-sm-row gap-2">
+                                        <button class="btn btn-success w-sm-auto text-nowrap" onclick="exportProducts()">
+                                            📊 Export Products
+                                        </button>
+                                        <button class="btn btn-primary w-sm-auto text-nowrap" onclick="showAddProductModal()">
+                                            <i class="icon">
+                                                <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                </svg>
+                                            </i>
+                                            Add New Product
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -108,9 +119,9 @@ $products = $stmt->get_result();
                             <form method="GET" class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <label class="form-label">Search Product</label>
-                                    <input type="text" class="form-control" name="search" 
-                                           placeholder="Product name or generic name" 
-                                           value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                    <input type="text" class="form-control" name="search"
+                                        placeholder="Product name or generic name"
+                                        value="<?php echo htmlspecialchars($searchTerm); ?>">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Stock Status</label>
@@ -144,7 +155,7 @@ $products = $stmt->get_result();
                                     </thead>
                                     <tbody>
                                         <?php while ($product = $products->fetch_assoc()): ?>
-                                            <?php 
+                                            <?php
                                             $stockStatus = '';
                                             $statusBadge = '';
                                             if ($product['total_stock'] == 0) {
@@ -248,7 +259,7 @@ $products = $stmt->get_result();
             document.getElementById('productId').value = '';
             productModal.show();
         }
-        
+
         function exportProducts() {
             const urlParams = new URLSearchParams(window.location.search);
             window.location.href = 'export_products.php?' + urlParams.toString();
@@ -281,23 +292,23 @@ $products = $stmt->get_result();
             const formData = new FormData(form);
 
             fetch('api/save_product.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'An error occurred', 'error');
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'An error occurred', 'error');
+                });
         }
 
         function deleteProduct(productId) {
@@ -312,29 +323,32 @@ $products = $stmt->get_result();
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch('api/delete_product.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ product_id: productId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Deleted!', data.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error', 'An error occurred', 'error');
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                product_id: productId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'An error occurred', 'error');
+                        });
                 }
             });
         }
     </script>
 </body>
+
 </html>

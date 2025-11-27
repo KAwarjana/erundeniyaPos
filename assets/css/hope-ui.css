@@ -114,7 +114,7 @@ body {
   --bs-dark-rgb: 255, 255, 255;
   --bs-gray-rgb: 108, 117, 125;
   --bs-gray-dark-rgb: 52, 58, 64;
-  --bs-primary-text-emphasis: #17235d;
+  --bs-primary-text-emphasis: #175d20;
   --bs-secondary-text-emphasis: #000c1f;
   --bs-success-text-emphasis: #0a4021;
   --bs-info-text-emphasis: #033e41;
@@ -165,7 +165,7 @@ body {
   --bs-link-color: #077a16;
   --bs-link-color-rgb: 58, 87, 232;
   --bs-link-decoration: none;
-  --bs-link-hover-color: #2e46ba;
+  --bs-link-hover-color: #3aba2e;
   --bs-link-hover-color-rgb: 46, 70, 186;
   --bs-code-color: #d63384;
   --bs-highlight-color: var(--bs-body-color);
@@ -4082,7 +4082,7 @@ textarea.form-control-lg {
   --bs-dropdown-divider-margin-y: 0.5rem;
   --bs-dropdown-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --bs-dropdown-link-color: var(--bs-gray-600);
-  --bs-dropdown-link-hover-color: #344ed1;
+  --bs-dropdown-link-hover-color: #34d149;
   --bs-dropdown-link-hover-bg: transparent;
   --bs-dropdown-link-active-color: var(--bs-primary);
   --bs-dropdown-link-active-bg: transparent;

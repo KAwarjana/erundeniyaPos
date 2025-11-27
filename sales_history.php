@@ -64,12 +64,13 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Sales History | Ayurvedic Pharmacy</title>
+    <title>E. W. D. Erundeniya</title>
 
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 
 <body>
@@ -96,7 +97,7 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                     <h4 class="mb-0"><?php echo number_format(intval($summary['total_sales'] ?? 0)); ?></h4>
                                 </div>
                                 <div class="rounded-circle bg-soft-primary p-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
                                         <path d="M3 9L12 2L21 9V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V9Z" stroke="currentColor" stroke-width="2" />
                                     </svg>
                                 </div>
@@ -113,7 +114,7 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                     <h4 class="mb-0 text-success">Rs. <?php echo number_format(floatval($summary['total_revenue'] ?? 0), 2); ?></h4>
                                 </div>
                                 <div class="rounded-circle bg-soft-success p-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
                                         <path d="M12 2V22M17 5H9.5C7.01472 5 5 7.01472 5 9.5C5 11.9853 7.01472 14 9.5 14H14.5C16.9853 14 19 16.0147 19 18.5C19 20.9853 16.9853 23 14.5 23H6" stroke="currentColor" stroke-width="2" />
                                     </svg>
                                 </div>
@@ -130,7 +131,7 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                     <h4 class="mb-0 text-danger">Rs. <?php echo number_format(floatval($summary['total_discount'] ?? 0), 2); ?></h4>
                                 </div>
                                 <div class="rounded-circle bg-soft-danger p-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
                                         <path d="M9 2L2 9L9 16M15 8L22 15L15 22" stroke="currentColor" stroke-width="2" />
                                     </svg>
                                 </div>
@@ -143,8 +144,8 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Sales History</h4>
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h4 class="card-title mb-0">Sales History</h4>
                             <button type="button" class="btn btn-success" onclick="exportSalesReport()">
                                 📊 Export
                             </button>
@@ -171,7 +172,6 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                 <div class="col-md-3 d-flex align-items-end gap-2">
                                     <button type="submit" class="btn btn-primary">Filter</button>
                                     <a href="sales_history.php" class="btn btn-secondary">Reset</a>
-
                                 </div>
                             </form>
 
@@ -209,14 +209,14 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                                 <td><?php echo htmlspecialchars($sale['user_name']); ?></td>
                                                 <td>
                                                     <button class="btn btn-sm btn-icon btn-info" onclick="viewSale(<?php echo $sale['sale_id']; ?>)" title="View Details">
-                                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M15.5833 12C15.5833 14.0711 13.9044 15.75 11.8333 15.75C9.76221 15.75 8.08333 14.0711 8.08333 12C8.08333 9.92893 9.76221 8.25 11.8333 8.25C13.9044 8.25 15.5833 9.92893 15.5833 12Z" stroke="currentColor" stroke-width="1.5" />
-                                                            <path d="M11.8333 19.25C15.5083 19.25 18.8454 16.8714 20.9167 12C18.8454 7.12863 15.5083 4.75 11.8333 4.75C8.15835 4.75 4.82123 7.12863 2.75 12C4.82123 16.8714 8.15835 19.25 11.8333 19.25Z" stroke="currentColor" stroke-width="1.5" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                                                            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                                                            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
                                                         </svg>
                                                     </button>
                                                     <button class="btn btn-sm btn-icon btn-success" onclick="printReceipt(<?php echo $sale['sale_id']; ?>)" title="Print Receipt">
-                                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M7 17H17M7 10H17M9 3H15L17 5V21H7V5L9 3Z" stroke="currentColor" stroke-width="2" />
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M19 8H5C3.34 8 2 9.34 2 11V17H6V21H18V17H22V11C22 9.34 20.66 8 19 8ZM16 19H8V14H16V19ZM19 12C18.45 12 18 11.55 18 11C18 10.45 18.45 10 19 10C19.55 10 20 10.45 20 11C20 11.55 19.55 12 19 12ZM18 3H6V7H18V3Z" fill="currentColor" />
                                                         </svg>
                                                     </button>
                                                 </td>
@@ -257,8 +257,6 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
 
     <script>
         function viewSale(saleId) {
-            // Get paid and change amounts if available (for recent sales)
-            // For now, open without payment details - they can be added to database later
             window.open('view_sale.php?sale_id=' + saleId, '_blank', 'width=900,height=700');
         }
 

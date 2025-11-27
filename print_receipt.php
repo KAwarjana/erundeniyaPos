@@ -57,6 +57,7 @@ $items = $stmt->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt - #<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?></title>
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <style>
         * {
             margin: 0;

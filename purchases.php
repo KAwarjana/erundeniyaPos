@@ -67,6 +67,7 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 <body>
     <div id="loading">

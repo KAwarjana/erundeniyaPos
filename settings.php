@@ -16,27 +16,32 @@ $users = $conn->query("SELECT u.*, r.role_name
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-     <title>E. W. D. Erundeniya</title>
-    
+    <title>E. W. D. Erundeniya</title>
+
     <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
+
 <body>
     <div id="loading">
-        <div class="loader simple-loader"><div class="loader-body"></div></div>
+        <div class="loader simple-loader">
+            <div class="loader-body"></div>
+        </div>
     </div>
 
     <?php include 'includes/sidebar.php'; ?>
 
     <main class="main-content">
         <?php include 'includes/header.php'; ?>
-        
+
         <div class="conatiner-fluid content-inner mt-n5 py-0">
             <div class="row">
                 <div class="col-lg-12">
@@ -83,7 +88,7 @@ $users = $conn->query("SELECT u.*, r.role_name
                                             </form>
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-md-6 mt-md-0 mt-sm-5 mt-5">
                                             <h5 class="mb-3">Change Password</h5>
                                             <form id="passwordForm">
                                                 <div class="mb-3">
@@ -106,9 +111,15 @@ $users = $conn->query("SELECT u.*, r.role_name
 
                                 <!-- Users Tab -->
                                 <div class="tab-pane fade" id="users" role="tabpanel">
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <h5>User Management</h5>
-                                        <button class="btn btn-primary" onclick="showAddUserModal()">Add New User</button>
+                                    <div class="row align-items-center mb-3 g-2">
+                                        <div class="col">
+                                            <h5 class="mb-0">User Management</h5>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button class="btn btn-primary w-100" onclick="showAddUserModal()">
+                                                Add New User
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="table-responsive">
                                         <table class="table table-striped">
@@ -137,6 +148,7 @@ $users = $conn->query("SELECT u.*, r.role_name
                                                                 <button class="btn btn-sm btn-icon btn-danger" onclick="deleteUser(<?php echo $user['user_id']; ?>)">
                                                                     <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                         <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                                                                        <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                                     </svg>
                                                                 </button>
                                                             <?php else: ?>
@@ -152,9 +164,15 @@ $users = $conn->query("SELECT u.*, r.role_name
 
                                 <!-- Roles Tab -->
                                 <div class="tab-pane fade" id="roles" role="tabpanel">
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <h5>Role Management</h5>
-                                        <button class="btn btn-primary" onclick="showAddRoleModal()">Add New Role</button>
+                                    <div class="row align-items-center mb-3 g-2">
+                                        <div class="col">
+                                            <h5 class="mb-0">Role Management</h5>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button class="btn btn-primary w-100" onclick="showAddRoleModal()">
+                                                Add New Role
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="table-responsive">
                                         <table class="table table-striped">
@@ -166,9 +184,9 @@ $users = $conn->query("SELECT u.*, r.role_name
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php 
+                                                <?php
                                                 $roles->data_seek(0);
-                                                while ($role = $roles->fetch_assoc()): 
+                                                while ($role = $roles->fetch_assoc()):
                                                 ?>
                                                     <tr>
                                                         <td><?php echo $role['role_id']; ?></td>
@@ -177,6 +195,7 @@ $users = $conn->query("SELECT u.*, r.role_name
                                                             <button class="btn btn-sm btn-icon btn-danger" onclick="deleteRole(<?php echo $role['role_id']; ?>)">
                                                                 <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                     <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                                                                    <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                                 </svg>
                                                             </button>
                                                         </td>
@@ -226,9 +245,9 @@ $users = $conn->query("SELECT u.*, r.role_name
                             <label class="form-label">Role *</label>
                             <select class="form-select" id="roleId" name="role_id" required>
                                 <option value="">Select Role</option>
-                                <?php 
+                                <?php
                                 $roles->data_seek(0);
-                                while ($role = $roles->fetch_assoc()): 
+                                while ($role = $roles->fetch_assoc()):
                                 ?>
                                     <option value="<?php echo $role['role_id']; ?>"><?php echo htmlspecialchars($role['role_name']); ?></option>
                                 <?php endwhile; ?>
@@ -282,18 +301,23 @@ $users = $conn->query("SELECT u.*, r.role_name
             const email = document.getElementById('email').value;
 
             fetch('api/update_profile.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ full_name: fullName, email: email })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        full_name: fullName,
+                        email: email
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
 
         function changePassword() {
@@ -307,19 +331,24 @@ $users = $conn->query("SELECT u.*, r.role_name
             }
 
             fetch('api/change_password.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ current_password: current, new_password: newPass })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success');
-                    document.getElementById('passwordForm').reset();
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: current,
+                        new_password: newPass
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success');
+                        document.getElementById('passwordForm').reset();
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
 
         function showAddUserModal() {
@@ -332,17 +361,17 @@ $users = $conn->query("SELECT u.*, r.role_name
             const formData = new FormData(form);
 
             fetch('api/add_user.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
 
         function deleteUser(userId) {
@@ -356,18 +385,22 @@ $users = $conn->query("SELECT u.*, r.role_name
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch('api/delete_user.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: userId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_id: userId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
                 }
             });
         }
@@ -381,18 +414,22 @@ $users = $conn->query("SELECT u.*, r.role_name
             const roleName = document.getElementById('roleName').value;
 
             fetch('api/add_role.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role_name: roleName })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        role_name: roleName
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
 
         function deleteRole(roleId) {
@@ -406,21 +443,26 @@ $users = $conn->query("SELECT u.*, r.role_name
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch('api/delete_role.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ role_id: roleId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                role_id: roleId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
                 }
             });
         }
     </script>
 </body>
+
 </html>

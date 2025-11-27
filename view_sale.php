@@ -58,9 +58,11 @@ $items = $stmt->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Sale - #<?php echo str_pad($saleId, 5, '0', STR_PAD_LEFT); ?></title>
     
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
-    
+    <link rel="stylesheet" href="assets/css/custom.css">
+
     <style>
         body {
             background: #f8f9fa;

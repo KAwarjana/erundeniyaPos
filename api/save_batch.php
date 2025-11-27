@@ -55,11 +55,11 @@ try {
     }
     
     if ($batchId > 0) {
-        // Update existing batch
+        // Update existing batch - FIXED: Removed extra space in bind_param
         $stmt = $conn->prepare("UPDATE product_batches 
                                SET product_id = ?, batch_no = ?, expiry_date = ?, cost_price = ?, selling_price = ?, quantity_in_stock = ? 
                                WHERE batch_id = ?");
-        $stmt->bind_param("issddi i", $productId, $batchNo, $expiryDate, $costPrice, $sellingPrice, $quantity, $batchId);
+        $stmt->bind_param("issdiii", $productId, $batchNo, $expiryDate, $costPrice, $sellingPrice, $quantity, $batchId);
         
         if ($stmt->execute()) {
             $conn->commit();

@@ -65,6 +65,7 @@ $expiringSoon = $conn->query("SELECT p.product_name, pb.batch_no, pb.expiry_date
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/customizer.min.css?v=5.0.0">
+    <link rel="stylesheet" href="assets/css/custom.css">
 </head>
 <body>
     <div id="loading">

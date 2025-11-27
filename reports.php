@@ -66,18 +66,21 @@ ORDER BY pb.expiry_date ASC");
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Reports | Ayurvedic Pharmacy</title>
-    
-    <link rel="shortcut icon" href="assets/images/logo_white.png">
+    <title>E. W. D. Erundeniya</title>
+
+    <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
-    
+    <link rel="stylesheet" href="assets/css/custom.css">
+
     <style>
         @media print {
+
             /* Hide elements that shouldn't be printed */
             #loading,
             .sidebar,
@@ -88,17 +91,17 @@ ORDER BY pb.expiry_date ASC");
             .card-body form {
                 display: none !important;
             }
-            
+
             /* Adjust main content for print */
             .main-content {
                 margin-left: 0 !important;
                 padding: 0 !important;
             }
-            
+
             .content-inner {
                 margin-top: 0 !important;
             }
-            
+
             /* Card adjustments */
             .card {
                 border: 1px solid #ddd !important;
@@ -106,49 +109,50 @@ ORDER BY pb.expiry_date ASC");
                 page-break-inside: avoid;
                 margin-bottom: 20px;
             }
-            
+
             .card-header {
                 background-color: #f8f9fa !important;
                 border-bottom: 2px solid #000 !important;
                 padding: 10px 15px !important;
             }
-            
+
             /* Table styling for print */
             table {
                 width: 100% !important;
                 font-size: 12px !important;
             }
-            
+
             table thead {
                 background-color: #f0f0f0 !important;
             }
-            
-            table th, table td {
+
+            table th,
+            table td {
                 padding: 8px !important;
                 border: 1px solid #ddd !important;
             }
-            
+
             /* Print header */
             @page {
                 margin: 15mm;
             }
-            
+
             body {
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
             }
-            
+
             .badge {
                 border: 1px solid #000 !important;
                 padding: 3px 6px !important;
             }
         }
-        
+
         /* Print header styles */
         .print-header {
             display: none;
         }
-        
+
         @media print {
             .print-header {
                 display: block !important;
@@ -157,13 +161,13 @@ ORDER BY pb.expiry_date ASC");
                 border-bottom: 3px solid #000;
                 padding-bottom: 15px;
             }
-            
+
             .print-header h1 {
                 margin: 0;
                 font-size: 24px;
                 color: #000;
             }
-            
+
             .print-header p {
                 margin: 5px 0;
                 font-size: 14px;
@@ -171,16 +175,19 @@ ORDER BY pb.expiry_date ASC");
         }
     </style>
 </head>
+
 <body>
     <div id="loading">
-        <div class="loader simple-loader"><div class="loader-body"></div></div>
+        <div class="loader simple-loader">
+            <div class="loader-body"></div>
+        </div>
     </div>
 
     <?php include 'includes/sidebar.php'; ?>
 
     <main class="main-content">
         <?php include 'includes/header.php'; ?>
-        
+
         <div class="conatiner-fluid content-inner mt-n5 py-0">
             <!-- Print Header (only visible when printing) -->
             <div class="print-header">
@@ -188,35 +195,45 @@ ORDER BY pb.expiry_date ASC");
                 <p>Report Period: <?php echo date('M d, Y', strtotime($dateFrom)); ?> to <?php echo date('M d, Y', strtotime($dateTo)); ?></p>
                 <p>Generated on: <?php echo date('F d, Y h:i A'); ?></p>
             </div>
-            
+
+            <!-- Date Range Filter -->
             <!-- Date Range Filter -->
             <div class="row mb-4 no-print">
-                <div class="col-sm-12">
+                <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <form method="GET" class="row g-3 align-items-end">
-                                <div class="col-md-3">
-                                    <label class="form-label">Date From</label>
-                                    <input type="date" class="form-control" name="date_from" value="<?php echo $dateFrom; ?>">
+                            <form method="GET" class="row g-2 align-items-end">
+                                <!-- DATE FIELDS -->
+                                <div class="col-sm-6 col-md-auto flex-fill">
+                                    <label class="form-label mb-1">Date From</label>
+                                    <input type="date" class="form-control" name="date_from"
+                                        value="<?php echo $dateFrom; ?>">
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Date To</label>
-                                    <input type="date" class="form-control" name="date_to" value="<?php echo $dateTo; ?>">
+                                <div class="col-sm-6 col-md-auto flex-fill">
+                                    <label class="form-label mb-1">Date To</label>
+                                    <input type="date" class="form-control" name="date_to"
+                                        value="<?php echo $dateTo; ?>">
                                 </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-primary">Generate Report</button>
-                                    <a href="reports.php" class="btn btn-secondary">Reset</a>
-                                </div>
-                                <div class="col-md-3 text-end">
-                                    <button type="button" class="btn btn-success" onclick="window.print()">
+
+                                <!-- BUTTONS -->
+                                <div class="col-md-auto d-flex flex-wrap gap-2 mt-md-3 mt-3">
+                                    <button type="submit" class="btn btn-primary flex-fill">
+                                        Generate Report
+                                    </button>
+                                    <a href="reports.php" class="btn btn-secondary flex-fill">
+                                        Reset
+                                    </a>
+                                    <button type="button" class="btn btn-success flex-fill"
+                                        onclick="window.print()">
                                         <i class="icon">
-                                            <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M7 17H17M7 10H17M9 3H15L17 5V21H7V5L9 3Z" stroke="currentColor" stroke-width="2"/>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M19 8H5C3.34 8 2 9.34 2 11V17H6V21H18V17H22V11C22 9.34 20.66 8 19 8ZM16 19H8V14H16V19ZM19 12C18.45 12 18 11.55 18 11C18 10.45 18.45 10 19 10C19.55 10 20 10.45 20 11C20 11.55 19.55 12 19 12ZM18 3H6V7H18V3Z" fill="currentColor" />
                                             </svg>
                                         </i>
                                         Print Report
                                     </button>
-                                    <button type="button" class="btn btn-info" onclick="exportStockReport()">
+                                    <button type="button" class="btn btn-info flex-fill"
+                                        onclick="exportStockReport()">
                                         📊 Export Stock
                                     </button>
                                 </div>
@@ -246,12 +263,12 @@ ORDER BY pb.expiry_date ASC");
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php 
+                                        <?php
                                         $totalSales = 0;
                                         $totalGross = 0;
                                         $totalDiscount = 0;
                                         $totalNet = 0;
-                                        while ($row = $salesData->fetch_assoc()): 
+                                        while ($row = $salesData->fetch_assoc()):
                                             $totalSales += $row['total_sales'];
                                             $totalGross += $row['gross_sales'];
                                             $totalDiscount += $row['total_discount'];
@@ -395,11 +412,12 @@ ORDER BY pb.expiry_date ASC");
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
     <script src="assets/js/hope-ui.js" defer></script>
-    
+
     <script>
         function exportStockReport() {
             window.location.href = 'export_stock.php';
         }
     </script>
 </body>
+
 </html>
