@@ -6,6 +6,7 @@ $conn = getDBConnection();
 
 // Get filter parameters
 $stockStatus = $_GET['stock_status'] ?? '';
+$productStatus = $_GET['product_status'] ?? 'active';
 $searchTerm = $_GET['search'] ?? '';
 
 // Build the query with filters
@@ -15,6 +16,7 @@ $sql = "SELECT
     p.generic_name,
     p.unit,
     p.reorder_level,
+    p.status,
     COALESCE(SUM(pb.quantity_in_stock), 0) as total_stock,
     COUNT(pb.batch_id) as batch_count
 FROM products p
@@ -23,6 +25,12 @@ LEFT JOIN product_batches pb ON p.product_id = pb.product_id";
 $whereClauses = [];
 $params = [];
 $types = "";
+
+if ($productStatus !== 'all') {
+    $whereClauses[] = "p.status = ?";
+    $params[] = $productStatus;
+    $types .= "s";
+}
 
 if (!empty($searchTerm)) {
     $whereClauses[] = "(p.product_name LIKE ? OR p.generic_name LIKE ?)";
@@ -38,7 +46,6 @@ if (!empty($whereClauses)) {
 
 $sql .= " GROUP BY p.product_id";
 
-// Apply stock status filter after grouping
 if ($stockStatus === 'out_of_stock') {
     $sql .= " HAVING total_stock = 0";
 } elseif ($stockStatus === 'low_stock') {
@@ -96,7 +103,6 @@ $products = $stmt->get_result();
 
                                 <div class="col"></div>
 
-                                <!-- buttons -->
                                 <div class="col-sm-auto mt-sm-2">
                                     <div class="d-flex flex-column flex-sm-row gap-2">
                                         <button class="btn btn-success w-sm-auto text-nowrap" onclick="exportProducts()">
@@ -117,11 +123,19 @@ $products = $stmt->get_result();
                         <div class="card-body">
                             <!-- Filters -->
                             <form method="GET" class="row g-3 mb-4">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Search Product</label>
                                     <input type="text" class="form-control" name="search"
                                         placeholder="Product name or generic name"
                                         value="<?php echo htmlspecialchars($searchTerm); ?>">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Product Status</label>
+                                    <select class="form-select" name="product_status">
+                                        <option value="active" <?php echo $productStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
+                                        <option value="inactive" <?php echo $productStatus === 'inactive' ? 'selected' : ''; ?>>Inactive Only</option>
+                                        <option value="all" <?php echo $productStatus === 'all' ? 'selected' : ''; ?>>All Products</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Stock Status</label>
@@ -132,7 +146,7 @@ $products = $stmt->get_result();
                                         <option value="out_of_stock" <?php echo $stockStatus === 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
                                     </select>
                                 </div>
-                                <div class="col-md-5 d-flex align-items-end gap-2">
+                                <div class="col-md-3 d-flex align-items-end gap-2">
                                     <button type="submit" class="btn btn-primary">Filter</button>
                                     <a href="products.php" class="btn btn-secondary">Reset</a>
                                 </div>
@@ -149,35 +163,48 @@ $products = $stmt->get_result();
                                             <th>Total Stock</th>
                                             <th>Reorder Level</th>
                                             <th>Batches</th>
-                                            <th>Status</th>
+                                            <th>Stock Status</th>
+                                            <th>Product Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php while ($product = $products->fetch_assoc()): ?>
                                             <?php
-                                            $stockStatus = '';
-                                            $statusBadge = '';
+                                            $stockStatusText = '';
+                                            $stockBadge = '';
                                             if ($product['total_stock'] == 0) {
-                                                $stockStatus = 'Out of Stock';
-                                                $statusBadge = 'danger';
+                                                $stockStatusText = 'Out of Stock';
+                                                $stockBadge = 'danger';
                                             } elseif ($product['total_stock'] <= $product['reorder_level']) {
-                                                $stockStatus = 'Low Stock';
-                                                $statusBadge = 'warning';
+                                                $stockStatusText = 'Low Stock';
+                                                $stockBadge = 'warning';
                                             } else {
-                                                $stockStatus = 'In Stock';
-                                                $statusBadge = 'success';
+                                                $stockStatusText = 'In Stock';
+                                                $stockBadge = 'success';
                                             }
+                                            
+                                            $isActive = $product['status'] === 'active';
                                             ?>
-                                            <tr>
+                                            <tr class="<?php echo !$isActive ? 'table-secondary' : ''; ?>">
                                                 <td><?php echo $product['product_id']; ?></td>
-                                                <td><strong><?php echo htmlspecialchars($product['product_name']); ?></strong></td>
+                                                <td>
+                                                    <strong><?php echo htmlspecialchars($product['product_name']); ?></strong>
+                                                    <?php if (!$isActive): ?>
+                                                        <span class="badge bg-secondary ms-2">Inactive</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td><?php echo htmlspecialchars($product['generic_name'] ?? '-'); ?></td>
                                                 <td><?php echo htmlspecialchars($product['unit'] ?? '-'); ?></td>
                                                 <td><?php echo $product['total_stock']; ?></td>
                                                 <td><?php echo $product['reorder_level']; ?></td>
                                                 <td><?php echo $product['batch_count']; ?></td>
-                                                <td><span class="badge bg-<?php echo $statusBadge; ?>"><?php echo $stockStatus; ?></span></td>
+                                                <td><span class="badge bg-<?php echo $stockBadge; ?>"><?php echo $stockStatusText; ?></span></td>
+                                                <td>
+                                                    <span class="badge bg-<?php echo $isActive ? 'success' : 'secondary'; ?>">
+                                                        <?php echo $isActive ? 'Active' : 'Inactive'; ?>
+                                                    </span>
+                                                </td>
                                                 <td>
                                                     <button class="btn btn-sm btn-icon btn-warning" onclick="editProduct(<?php echo $product['product_id']; ?>)" title="Edit">
                                                         <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -186,13 +213,20 @@ $products = $stmt->get_result();
                                                             <path d="M11.021 6.00098L16.4732 10.1881" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                         </svg>
                                                     </button>
-                                                    <button class="btn btn-sm btn-icon btn-danger" onclick="deleteProduct(<?php echo $product['product_id']; ?>)" title="Delete">
-                                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                            <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                            <path d="M17.4406 6.23973C16.6556 6.23973 15.9796 5.68473 15.8256 4.91573L15.5826 3.69973C15.4326 3.13873 14.9246 2.75073 14.3456 2.75073H10.1126C9.53358 2.75073 9.02558 3.13873 8.87558 3.69973L8.63258 4.91573C8.47858 5.68473 7.80258 6.23973 7.01758 6.23973" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                        </svg>
-                                                    </button>
+                                                    <?php if ($isActive): ?>
+                                                        <button class="btn btn-sm btn-icon btn-danger" onclick="toggleProductStatus(<?php echo $product['product_id']; ?>, 'inactive')" title="Deactivate Product">
+                                                            <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                <path d="M4.92896 4.92896L19.071 19.071" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            </svg>
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <button class="btn btn-sm btn-icon btn-success" onclick="toggleProductStatus(<?php echo $product['product_id']; ?>, 'active')" title="Activate Product">
+                                                            <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            </svg>
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endwhile; ?>
@@ -210,7 +244,7 @@ $products = $stmt->get_result();
 
     <!-- Add/Edit Product Modal -->
     <div class="modal fade" id="productModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="productModalTitle">Add New Product</h5>
@@ -219,21 +253,80 @@ $products = $stmt->get_result();
                 <div class="modal-body">
                     <form id="productForm">
                         <input type="hidden" id="productId" name="product_id">
-                        <div class="mb-3">
-                            <label for="productName" class="form-label">Product Name *</label>
-                            <input type="text" class="form-control" id="productName" name="product_name" required>
+                        
+                        <!-- Product Information Section -->
+                        <div class="border-bottom pb-3 mb-3">
+                            <h6 class="text-primary mb-3">Product Information</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="productName" class="form-label">Product Name *</label>
+                                    <input type="text" class="form-control" id="productName" name="product_name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="genericName" class="form-label">Generic Name</label>
+                                    <input type="text" class="form-control" id="genericName" name="generic_name">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="unit" class="form-label">Unit</label>
+                                    <input type="text" class="form-control" id="unit" name="unit" placeholder="e.g., Tablet, Capsule">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="reorderLevel" class="form-label">Reorder Level *</label>
+                                    <input type="number" class="form-control" id="reorderLevel" name="reorder_level" value="10" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="productStatus" class="form-label">Status *</label>
+                                    <select class="form-select" id="productStatus" name="status" required>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="genericName" class="form-label">Generic Name</label>
-                            <input type="text" class="form-control" id="genericName" name="generic_name">
-                        </div>
-                        <div class="mb-3">
-                            <label for="unit" class="form-label">Unit</label>
-                            <input type="text" class="form-control" id="unit" name="unit" placeholder="e.g., Tablet, Capsule, Syrup">
-                        </div>
-                        <div class="mb-3">
-                            <label for="reorderLevel" class="form-label">Reorder Level *</label>
-                            <input type="number" class="form-control" id="reorderLevel" name="reorder_level" value="10" required>
+
+                        <!-- Initial Stock Section (Only for new products) -->
+                        <div id="initialStockSection">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-primary mb-0">Initial Stock Details (Optional)</h6>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="addInitialStock" onchange="toggleInitialStock()">
+                                    <label class="form-check-label" for="addInitialStock">
+                                        Add initial stock now
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="stockFields" style="display: none;">
+                                <div class="alert alert-info">
+                                    <small><i class="icon">ℹ️</i> You can add stock details now or add them later from Stock Management page.</small>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="batchNo" class="form-label">Batch Number *</label>
+                                        <input type="text" class="form-control" id="batchNo" name="batch_no">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="expiryDate" class="form-label">Expiry Date *</label>
+                                        <input type="date" class="form-control" id="expiryDate" name="expiry_date">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="costPrice" class="form-label">Cost Price (Rs.) </label>
+                                        <input type="number" class="form-control" id="costPrice" name="cost_price" step="0.01">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="sellingPrice" class="form-label">Selling Price (Rs.) *</label>
+                                        <input type="number" class="form-control" id="sellingPrice" name="selling_price" step="0.01">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="quantity" class="form-label">Quantity *</label>
+                                        <input type="number" class="form-control" id="quantity" name="quantity_in_stock">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -253,10 +346,35 @@ $products = $stmt->get_result();
     <script>
         const productModal = new bootstrap.Modal(document.getElementById('productModal'));
 
+        function toggleInitialStock() {
+            const checkbox = document.getElementById('addInitialStock');
+            const stockFields = document.getElementById('stockFields');
+            const fields = stockFields.querySelectorAll('input');
+            
+            if (checkbox.checked) {
+                stockFields.style.display = 'block';
+                fields.forEach(field => {
+                    if (field.name !== 'batch_no') {
+                        field.setAttribute('required', 'required');
+                    }
+                });
+            } else {
+                stockFields.style.display = 'none';
+                fields.forEach(field => {
+                    field.removeAttribute('required');
+                    field.value = '';
+                });
+            }
+        }
+
         function showAddProductModal() {
             document.getElementById('productModalTitle').textContent = 'Add New Product';
             document.getElementById('productForm').reset();
             document.getElementById('productId').value = '';
+            document.getElementById('productStatus').value = 'active';
+            document.getElementById('initialStockSection').style.display = 'block';
+            document.getElementById('addInitialStock').checked = false;
+            document.getElementById('stockFields').style.display = 'none';
             productModal.show();
         }
 
@@ -276,6 +394,8 @@ $products = $stmt->get_result();
                         document.getElementById('genericName').value = data.product.generic_name || '';
                         document.getElementById('unit').value = data.product.unit || '';
                         document.getElementById('reorderLevel').value = data.product.reorder_level;
+                        document.getElementById('productStatus').value = data.product.status;
+                        document.getElementById('initialStockSection').style.display = 'none';
                         productModal.show();
                     } else {
                         Swal.fire('Error', 'Failed to load product data', 'error');
@@ -290,6 +410,10 @@ $products = $stmt->get_result();
         function saveProduct() {
             const form = document.getElementById('productForm');
             const formData = new FormData(form);
+            const addStock = document.getElementById('addInitialStock').checked;
+            
+            // Add flag to indicate if initial stock should be added
+            formData.append('add_initial_stock', addStock ? '1' : '0');
 
             fetch('api/save_product.php', {
                     method: 'POST',
@@ -311,30 +435,36 @@ $products = $stmt->get_result();
                 });
         }
 
-        function deleteProduct(productId) {
+        function toggleProductStatus(productId, newStatus) {
+            const action = newStatus === 'active' ? 'activate' : 'deactivate';
+            const actionText = newStatus === 'active' ? 'Activate' : 'Deactivate';
+            
             Swal.fire({
-                title: 'Delete Product?',
-                text: 'This will also delete all batches associated with this product. This action cannot be undone!',
-                icon: 'warning',
+                title: `${actionText} Product?`,
+                text: newStatus === 'inactive' 
+                    ? 'This product will not appear in POS and new batch additions. Existing stock will remain.' 
+                    : 'This product will be available again in POS and for new batches.',
+                icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
+                confirmButtonColor: newStatus === 'active' ? '#28a745' : '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: `Yes, ${action} it!`
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch('api/delete_product.php', {
+                    fetch('api/toggle_product_status.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
-                                product_id: productId
+                                product_id: productId,
+                                status: newStatus
                             })
                         })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                Swal.fire('Success!', data.message, 'success').then(() => {
                                     location.reload();
                                 });
                             } else {

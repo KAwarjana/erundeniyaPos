@@ -260,8 +260,8 @@ $items = $stmt->get_result();
         <div class="header">
             <h1>E. W. D. එරුන්දෙනිය හෙළ ඔසුසල</h1>
             <p>Quality Ayurvedic Products & Medicines</p>
-            <p>No. 123, Main Street, Negombo, Sri Lanka</p>
-            <p>Tel: +94 31 222 3333 | +94 77 123 4567</p>
+            <p>A/55 වෙදගෙදර, එරුන්දෙනිය, ආමිතිරිගල, උතුර.</p>
+            <p>Tel: +94 77 936 6908</p>
             <p>Email: info@erundeniyaosu.lk</p>
         </div>
 
@@ -400,7 +400,7 @@ $items = $stmt->get_result();
             <p>Please visit us again</p>
             <p style="margin-top: 10px; font-size: 10px;">
                 For inquiries: info@erundeniyaosu.lk<br>
-                Tel: +94 77 123 4567
+                Tel: +94 77 936 6908
             </p>
             <div class="divider" style="margin-top: 10px;"></div>
             <p style="font-size: 9px; margin-top: 10px;">

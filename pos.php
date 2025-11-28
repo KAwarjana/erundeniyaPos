@@ -347,9 +347,9 @@ $customers = $conn->query("SELECT customer_id, name, contact_no FROM customers O
                     <div class="col-12 col-lg-4">
                         <div class="invoice-preview">
                             <div class="invoice-header">
-                                <h4>ErundeniyaOsu.lk</h4>
-                                <p style="margin: 5px 0; font-size: 12px;">Address of the hospital</p>
-                                <p style="margin: 0; font-size: 12px;">Tel: 0000000000</p>
+                                <h4>E. W. D. එරුන්දෙනිය හෙළ ඔසුසල</h4>
+                                <p style="margin: 5px 0; font-size: 12px;">A/55 වෙදගෙදර, එරුන්දෙනිය, ආමිතිරිගල, උතුර.</p>
+                                <p style="margin: 0; font-size: 12px;">Tel: +94 77 936 6908</p>
                             </div>
 
                             <div class="invoice-details">

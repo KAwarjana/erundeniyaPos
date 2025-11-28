@@ -35,6 +35,9 @@ $todayStats = $todaySalesStmt->get_result()->fetch_assoc();
 
 // Last login (you can add a last_login field to users table later)
 $joinedDate = date('M d, Y', strtotime($user['created_at']));
+
+// Helper function to display email or N/A
+$displayEmail = !empty($user['email']) ? htmlspecialchars($user['email']) : 'N/A';
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
@@ -43,7 +46,7 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>E. W. D. Erundeniya</title>
-    
+
     <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
@@ -125,6 +128,11 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
 
         .info-value {
             color: #333;
+        }
+
+        .info-value.na-text {
+            color: #999;
+            font-style: italic;
         }
     </style>
 </head>
@@ -222,7 +230,9 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
                         </div>
                         <div class="info-row">
                             <span class="info-label">Email</span>
-                            <span class="info-value"><?php echo htmlspecialchars($user['email']); ?></span>
+                            <span class="info-value <?php echo $displayEmail === 'N/A' ? 'na-text' : ''; ?>">
+                                <?php echo $displayEmail; ?>
+                            </span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Role</span>
@@ -240,12 +250,6 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
                 <div class="col-lg-6">
                     <div class="info-card">
                         <h5 class="mb-4">Account Settings</h5>
-                        <!-- <button class="btn btn-primary w-100 mb-3" onclick="showChangePasswordModal()">
-                            <svg width="20" class="me-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 5.93913 15.5786 4.92172 14.8284 4.17157C14.0783 3.42143 13.0609 3 12 3C10.9391 3 9.92172 3.42143 9.17157 4.17157C8.42143 4.92172 8 5.93913 8 7V11H16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            Change Password
-                        </button> -->
                         <button class="btn btn-primary w-100" onclick="showEditProfileModal()">
                             <svg width="20" class="me-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M13.7476 20.4428H21.0002" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -286,39 +290,6 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
         <?php include 'includes/footer.php'; ?>
     </main>
 
-    <!-- Change Password Modal -->
-    <div class="modal fade" id="passwordModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Change Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="passwordForm">
-                        <div class="mb-3">
-                            <label for="currentPassword" class="form-label">Current Password *</label>
-                            <input type="password" class="form-control" id="currentPassword" name="current_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="newPassword" class="form-label">New Password *</label>
-                            <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6">
-                            <small class="text-muted">Minimum 6 characters</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="confirmPassword" class="form-label">Confirm New Password *</label>
-                            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="changePassword()">Change Password</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Edit Profile Modal -->
     <div class="modal fade" id="editProfileModal" tabindex="-1">
         <div class="modal-dialog">
@@ -330,12 +301,13 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
                 <div class="modal-body">
                     <form id="profileForm">
                         <div class="mb-3">
-                            <label for="fullName" class="form-label">Full Name *</label>
+                            <label for="fullName" class="form-label">Full Name (Required)</label>
                             <input type="text" class="form-control" id="fullName" name="full_name" value="<?php echo htmlspecialchars($user['full_name']); ?>" required>
                         </div>
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email *</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                            <label for="email" class="form-label">Email (Optional)</label>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" placeholder="abc@gmail.com">
+                            <small class="text-muted">Leave empty if not available</small>
                         </div>
                     </form>
                 </div>
@@ -353,64 +325,18 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.all.min.js"></script>
 
     <script>
-        const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
         const editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
-
-        function showChangePasswordModal() {
-            document.getElementById('passwordForm').reset();
-            passwordModal.show();
-        }
 
         function showEditProfileModal() {
             editProfileModal.show();
-        }
-
-        function changePassword() {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (newPassword !== confirmPassword) {
-                Swal.fire('Error', 'New passwords do not match', 'error');
-                return;
-            }
-
-            if (newPassword.length < 6) {
-                Swal.fire('Error', 'Password must be at least 6 characters', 'error');
-                return;
-            }
-
-            fetch('api/change_password.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        current_password: currentPassword,
-                        new_password: newPassword
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Success', 'Password changed successfully', 'success');
-                        passwordModal.hide();
-                        document.getElementById('passwordForm').reset();
-                    } else {
-                        Swal.fire('Error', data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire('Error', 'An error occurred', 'error');
-                });
         }
 
         function updateProfile() {
             const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
 
-            if (!fullName || !email) {
-                Swal.fire('Error', 'All fields are required', 'error');
+            if (!fullName) {
+                Swal.fire('Error', 'Full name is required', 'error');
                 return;
             }
 
@@ -421,7 +347,7 @@ $joinedDate = date('M d, Y', strtotime($user['created_at']));
                     },
                     body: JSON.stringify({
                         full_name: fullName,
-                        email: email
+                        email: email || null
                     })
                 })
                 .then(response => response.json())

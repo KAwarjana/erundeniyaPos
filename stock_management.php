@@ -211,7 +211,15 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                                     <?php echo date('M d, Y', strtotime($batch['expiry_date'])); ?>
                                                     <br><small class="text-muted"><?php echo abs($batch['days_to_expiry']); ?> days <?php echo $batch['days_to_expiry'] < 0 ? 'ago' : 'left'; ?></small>
                                                 </td>
-                                                <td>Rs. <?php echo number_format($batch['cost_price'], 2); ?></td>
+                                                <td>
+                                                    <?php 
+                                                    if ($batch['cost_price'] === null || $batch['cost_price'] == 0) {
+                                                        echo '<span style="color: #999; font-style: italic;">N/A</span>';
+                                                    } else {
+                                                        echo 'Rs. ' . number_format($batch['cost_price'], 2);
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td>Rs. <?php echo number_format($batch['selling_price'], 2); ?></td>
                                                 <td><strong><?php echo $batch['quantity_in_stock']; ?></strong></td>
                                                 <td><span class="badge bg-<?php echo $statusBadge; ?>"><?php echo $statusText; ?></span></td>

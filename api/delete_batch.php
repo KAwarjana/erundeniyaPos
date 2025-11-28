@@ -1,67 +1,91 @@
 <?php
-require_once '../config.php';
 require_once '../auth.php';
-
 Auth::requireAuth();
+
 header('Content-Type: application/json');
 
-$data = json_decode(file_get_contents('php://input'), true);
-$batchId = $data['batch_id'] ?? 0;
-
-if ($batchId <= 0) {
-    echo json_encode(['success' => false, 'message' => 'Invalid batch ID']);
-    exit;
-}
-
-$conn = getDBConnection();
-
 try {
-    // Check if batch is used in any sales
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM sale_items WHERE batch_id = ?");
-    $stmt->bind_param("i", $batchId);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+    $conn = getDBConnection();
     
-    if ($result['count'] > 0) {
-        echo json_encode(['success' => false, 'message' => 'Cannot delete batch with existing sales records']);
-        exit;
+    // Get the JSON input
+    $input = json_decode(file_get_contents('php://input'), true);
+    $batchId = $input['batch_id'] ?? null;
+    
+    if (!$batchId) {
+        throw new Exception('Batch ID is required');
     }
     
-    // Check if batch is used in any purchases
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM purchase_items WHERE batch_id = ?");
-    $stmt->bind_param("i", $batchId);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+    // Start transaction
+    $conn->begin_transaction();
     
-    if ($result['count'] > 0) {
-        echo json_encode(['success' => false, 'message' => 'Cannot delete batch with existing purchase records']);
-        exit;
+    // Check if batch exists
+    $checkStmt = $conn->prepare("SELECT batch_id, quantity_in_stock FROM product_batches WHERE batch_id = ?");
+    $checkStmt->bind_param("i", $batchId);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        throw new Exception('Batch not found');
+    }
+    
+    // Check if batch has been used in sales
+    $salesCheck = $conn->prepare("SELECT COUNT(*) as count FROM sale_items WHERE batch_id = ?");
+    $salesCheck->bind_param("i", $batchId);
+    $salesCheck->execute();
+    $salesResult = $salesCheck->get_result()->fetch_assoc();
+    
+    if ($salesResult['count'] > 0) {
+        throw new Exception('Cannot delete batch: It has been used in sales transactions. You can only adjust stock to zero.');
+    }
+    
+    // Check if batch has been used in purchases
+    $purchaseCheck = $conn->prepare("SELECT COUNT(*) as count FROM purchase_items WHERE batch_id = ?");
+    $purchaseCheck->bind_param("i", $batchId);
+    $purchaseCheck->execute();
+    $purchaseResult = $purchaseCheck->get_result()->fetch_assoc();
+    
+    if ($purchaseResult['count'] > 0) {
+        throw new Exception('Cannot delete batch: It has been used in purchase transactions. You can only adjust stock to zero.');
     }
     
     // Check if batch has stock adjustments
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM stock_adjustments WHERE batch_id = ?");
-    $stmt->bind_param("i", $batchId);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+    $adjustmentCheck = $conn->prepare("SELECT COUNT(*) as count FROM stock_adjustments WHERE batch_id = ?");
+    $adjustmentCheck->bind_param("i", $batchId);
+    $adjustmentCheck->execute();
+    $adjustmentResult = $adjustmentCheck->get_result()->fetch_assoc();
     
-    if ($result['count'] > 0) {
-        // Delete stock adjustments first
-        $stmt = $conn->prepare("DELETE FROM stock_adjustments WHERE batch_id = ?");
-        $stmt->bind_param("i", $batchId);
-        $stmt->execute();
+    if ($adjustmentResult['count'] > 0) {
+        // Delete stock adjustments first (they're just history records)
+        $deleteAdjustments = $conn->prepare("DELETE FROM stock_adjustments WHERE batch_id = ?");
+        $deleteAdjustments->bind_param("i", $batchId);
+        $deleteAdjustments->execute();
     }
     
-    // Delete the batch
-    $stmt = $conn->prepare("DELETE FROM product_batches WHERE batch_id = ?");
-    $stmt->bind_param("i", $batchId);
+    // Now safe to delete the batch
+    $deleteStmt = $conn->prepare("DELETE FROM product_batches WHERE batch_id = ?");
+    $deleteStmt->bind_param("i", $batchId);
     
-    if ($stmt->execute()) {
-        echo json_encode(['success' => true, 'message' => 'Batch deleted successfully']);
-    } else {
-        throw new Exception('Failed to delete batch');
+    if (!$deleteStmt->execute()) {
+        throw new Exception('Failed to delete batch: ' . $conn->error);
     }
+    
+    // Commit transaction
+    $conn->commit();
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Batch deleted successfully'
+    ]);
     
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    // Rollback on error
+    if (isset($conn)) {
+        $conn->rollback();
+    }
+    
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
 ?>
