@@ -29,14 +29,15 @@ WHERE 1=1";
 $params = [];
 $types = "";
 
-// Search filter
+// Search filter - updated to include product_id
 if (!empty($searchTerm)) {
-    $sql .= " AND (p.product_name LIKE ? OR p.generic_name LIKE ? OR pb.batch_no LIKE ?)";
+    $sql .= " AND (p.product_name LIKE ? OR p.generic_name LIKE ? OR pb.batch_no LIKE ? OR p.product_id LIKE ?)";
     $searchParam = "%$searchTerm%";
     $params[] = $searchParam;
     $params[] = $searchParam;
     $params[] = $searchParam;
-    $types .= "sss";
+    $params[] = $searchParam;
+    $types .= "ssss";
 }
 
 // Status filter
@@ -135,7 +136,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                 <div class="col-md-3">
                                     <label class="form-label">Search</label>
                                     <input type="text" class="form-control" name="search"
-                                        placeholder="Product or batch number"
+                                        placeholder="Product ID, Name or Batch No"
                                         value="<?php echo htmlspecialchars($searchTerm); ?>">
                                 </div>
                                 <div class="col-md-3">
@@ -167,6 +168,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                 <table class="table table-striped" id="stockTable">
                                     <thead>
                                         <tr>
+                                            <th>Product ID</th>
                                             <th>Product Name</th>
                                             <th>Batch No</th>
                                             <th>Expiry Date</th>
@@ -184,13 +186,13 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                             $statusText = 'Good';
 
                                             if ($batch['days_to_expiry'] < 0) {
-                                                $statusBadge = 'dark';
+                                                $statusBadge = 'danger';
                                                 $statusText = 'Expired';
                                             } elseif ($batch['days_to_expiry'] <= 30) {
-                                                $statusBadge = 'danger';
+                                                $statusBadge = 'warning';
                                                 $statusText = 'Expiring Soon';
                                             } elseif ($batch['days_to_expiry'] <= 90) {
-                                                $statusBadge = 'warning';
+                                                $statusBadge = 'primary';
                                                 $statusText = 'Near Expiry';
                                             }
 
@@ -200,6 +202,7 @@ $products = $conn->query("SELECT product_id, product_name, generic_name FROM pro
                                             }
                                             ?>
                                             <tr>
+                                                <td><strong><?php echo htmlspecialchars($batch['product_id']); ?></strong></td>
                                                 <td>
                                                     <strong><?php echo htmlspecialchars($batch['product_name']); ?></strong>
                                                     <?php if ($batch['generic_name']): ?>

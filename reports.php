@@ -4,43 +4,60 @@ Auth::requireAuth();
 
 $conn = getDBConnection();
 
-// Get date range
-$dateFrom = $_GET['date_from'] ?? date('Y-m-01');
-$dateTo = $_GET['date_to'] ?? date('Y-m-d');
+// Get date range - empty by default to show all data
+$dateFrom = $_GET['date_from'] ?? '';
+$dateTo = $_GET['date_to'] ?? '';
 
-// Sales Report
-$salesReport = $conn->prepare("SELECT 
+// Sales Report with dynamic date filter
+$salesSQL = "SELECT 
     DATE(sale_date) as date,
     COUNT(*) as total_sales,
     SUM(total_amount) as gross_sales,
     SUM(discount) as total_discount,
     SUM(net_amount) as net_sales
-FROM sales 
-WHERE DATE(sale_date) BETWEEN ? AND ?
-GROUP BY DATE(sale_date)
-ORDER BY date DESC");
-$salesReport->bind_param("ss", $dateFrom, $dateTo);
-$salesReport->execute();
-$salesData = $salesReport->get_result();
+FROM sales";
 
-// Top Selling Products
-$topProducts = $conn->prepare("SELECT 
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $salesSQL .= " WHERE DATE(sale_date) BETWEEN ? AND ?";
+}
+
+$salesSQL .= " GROUP BY DATE(sale_date) ORDER BY date DESC";
+
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $salesReport = $conn->prepare($salesSQL);
+    $salesReport->bind_param("ss", $dateFrom, $dateTo);
+    $salesReport->execute();
+    $salesData = $salesReport->get_result();
+} else {
+    $salesData = $conn->query($salesSQL);
+}
+
+// Top Selling Products with dynamic date filter
+$topProductsSQL = "SELECT 
     p.product_name,
     SUM(si.quantity) as total_quantity,
     SUM(si.total_price) as total_revenue
 FROM sale_items si
 JOIN product_batches pb ON si.batch_id = pb.batch_id
 JOIN products p ON pb.product_id = p.product_id
-JOIN sales s ON si.sale_id = s.sale_id
-WHERE DATE(s.sale_date) BETWEEN ? AND ?
-GROUP BY p.product_id
-ORDER BY total_quantity DESC
-LIMIT 10");
-$topProducts->bind_param("ss", $dateFrom, $dateTo);
-$topProducts->execute();
-$topProductsData = $topProducts->get_result();
+JOIN sales s ON si.sale_id = s.sale_id";
 
-// Low Stock Products
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $topProductsSQL .= " WHERE DATE(s.sale_date) BETWEEN ? AND ?";
+}
+
+$topProductsSQL .= " GROUP BY p.product_id ORDER BY total_quantity DESC LIMIT 10";
+
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $topProducts = $conn->prepare($topProductsSQL);
+    $topProducts->bind_param("ss", $dateFrom, $dateTo);
+    $topProducts->execute();
+    $topProductsData = $topProducts->get_result();
+} else {
+    $topProductsData = $conn->query($topProductsSQL);
+}
+
+// Low Stock Products (not date dependent)
 $lowStock = $conn->query("SELECT 
     p.product_name,
     p.reorder_level,
@@ -51,7 +68,7 @@ GROUP BY p.product_id
 HAVING current_stock <= p.reorder_level
 ORDER BY current_stock ASC");
 
-// Expiring Products
+// Expiring Products (not date dependent)
 $expiringProducts = $conn->query("SELECT 
     p.product_name,
     pb.batch_no,
@@ -192,11 +209,14 @@ ORDER BY pb.expiry_date ASC");
             <!-- Print Header (only visible when printing) -->
             <div class="print-header">
                 <h1>Ayurvedic Pharmacy - Sales Report</h1>
-                <p>Report Period: <?php echo date('M d, Y', strtotime($dateFrom)); ?> to <?php echo date('M d, Y', strtotime($dateTo)); ?></p>
+                <?php if (!empty($dateFrom) && !empty($dateTo)): ?>
+                    <p>Report Period: <?php echo date('M d, Y', strtotime($dateFrom)); ?> to <?php echo date('M d, Y', strtotime($dateTo)); ?></p>
+                <?php else: ?>
+                    <p>Report Period: All Time</p>
+                <?php endif; ?>
                 <p>Generated on: <?php echo date('F d, Y h:i A'); ?></p>
             </div>
 
-            <!-- Date Range Filter -->
             <!-- Date Range Filter -->
             <div class="row mb-4 no-print">
                 <div class="col-12">
@@ -268,11 +288,13 @@ ORDER BY pb.expiry_date ASC");
                                         $totalGross = 0;
                                         $totalDiscount = 0;
                                         $totalNet = 0;
-                                        while ($row = $salesData->fetch_assoc()):
-                                            $totalSales += $row['total_sales'];
-                                            $totalGross += $row['gross_sales'];
-                                            $totalDiscount += $row['total_discount'];
-                                            $totalNet += $row['net_sales'];
+                                        
+                                        if ($salesData->num_rows > 0):
+                                            while ($row = $salesData->fetch_assoc()):
+                                                $totalSales += $row['total_sales'];
+                                                $totalGross += $row['gross_sales'];
+                                                $totalDiscount += $row['total_discount'];
+                                                $totalNet += $row['net_sales'];
                                         ?>
                                             <tr>
                                                 <td><?php echo date('M d, Y', strtotime($row['date'])); ?></td>
@@ -281,8 +303,25 @@ ORDER BY pb.expiry_date ASC");
                                                 <td>Rs. <?php echo number_format($row['total_discount'], 2); ?></td>
                                                 <td><strong>Rs. <?php echo number_format($row['net_sales'], 2); ?></strong></td>
                                             </tr>
-                                        <?php endwhile; ?>
+                                        <?php 
+                                            endwhile;
+                                        else:
+                                        ?>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">
+                                                    <div class="alert alert-info mb-0">
+                                                        <strong>No sales data found</strong><br>
+                                                        <?php if (!empty($dateFrom) || !empty($dateTo)): ?>
+                                                            There are no sales records for the selected date range.
+                                                        <?php else: ?>
+                                                            There are no sales records in the system yet.
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
+                                    <?php if ($salesData->num_rows > 0): ?>
                                     <tfoot>
                                         <tr class="table-primary">
                                             <th>TOTAL</th>
@@ -292,6 +331,7 @@ ORDER BY pb.expiry_date ASC");
                                             <th>Rs. <?php echo number_format($totalNet, 2); ?></th>
                                         </tr>
                                     </tfoot>
+                                    <?php endif; ?>
                                 </table>
                             </div>
                         </div>
@@ -317,13 +357,23 @@ ORDER BY pb.expiry_date ASC");
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while ($product = $topProductsData->fetch_assoc()): ?>
+                                        <?php 
+                                        if ($topProductsData->num_rows > 0):
+                                            while ($product = $topProductsData->fetch_assoc()): 
+                                        ?>
                                             <tr>
                                                 <td><?php echo htmlspecialchars($product['product_name']); ?></td>
                                                 <td><strong><?php echo $product['total_quantity']; ?></strong></td>
                                                 <td>Rs. <?php echo number_format($product['total_revenue'], 2); ?></td>
                                             </tr>
-                                        <?php endwhile; ?>
+                                        <?php 
+                                            endwhile;
+                                        else:
+                                        ?>
+                                            <tr>
+                                                <td colspan="3" class="text-center py-3 text-muted">No products sold yet</td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -348,13 +398,23 @@ ORDER BY pb.expiry_date ASC");
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while ($item = $lowStock->fetch_assoc()): ?>
+                                        <?php 
+                                        if ($lowStock->num_rows > 0):
+                                            while ($item = $lowStock->fetch_assoc()): 
+                                        ?>
                                             <tr>
                                                 <td><?php echo htmlspecialchars($item['product_name']); ?></td>
                                                 <td><span class="badge bg-danger"><?php echo $item['current_stock']; ?></span></td>
                                                 <td><?php echo $item['reorder_level']; ?></td>
                                             </tr>
-                                        <?php endwhile; ?>
+                                        <?php 
+                                            endwhile;
+                                        else:
+                                        ?>
+                                            <tr>
+                                                <td colspan="3" class="text-center py-3 text-muted">All products have sufficient stock</td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -383,12 +443,13 @@ ORDER BY pb.expiry_date ASC");
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while ($exp = $expiringProducts->fetch_assoc()): ?>
-                                            <?php
-                                            $badgeClass = 'warning';
-                                            if ($exp['days_left'] < 0) $badgeClass = 'dark';
-                                            elseif ($exp['days_left'] <= 30) $badgeClass = 'danger';
-                                            ?>
+                                        <?php 
+                                        if ($expiringProducts->num_rows > 0):
+                                            while ($exp = $expiringProducts->fetch_assoc()): 
+                                                $badgeClass = 'warning';
+                                                if ($exp['days_left'] < 0) $badgeClass = 'danger';
+                                                elseif ($exp['days_left'] <= 30) $badgeClass = 'warning';
+                                        ?>
                                             <tr>
                                                 <td><?php echo htmlspecialchars($exp['product_name']); ?></td>
                                                 <td><?php echo htmlspecialchars($exp['batch_no']); ?></td>
@@ -396,7 +457,14 @@ ORDER BY pb.expiry_date ASC");
                                                 <td><span class="badge bg-<?php echo $badgeClass; ?>"><?php echo abs($exp['days_left']); ?> days <?php echo $exp['days_left'] < 0 ? 'ago' : 'left'; ?></span></td>
                                                 <td><?php echo $exp['quantity_in_stock']; ?></td>
                                             </tr>
-                                        <?php endwhile; ?>
+                                        <?php 
+                                            endwhile;
+                                        else:
+                                        ?>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-3 text-muted">No products expiring in the next 3 months</td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>

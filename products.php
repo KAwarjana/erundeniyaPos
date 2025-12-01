@@ -9,6 +9,9 @@ $stockStatus = $_GET['stock_status'] ?? '';
 $productStatus = $_GET['product_status'] ?? 'active';
 $searchTerm = $_GET['search'] ?? '';
 
+// Get suppliers for dropdown
+$suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name");
+
 // Build the query with filters
 $sql = "SELECT 
     p.product_id,
@@ -33,11 +36,13 @@ if ($productStatus !== 'all') {
 }
 
 if (!empty($searchTerm)) {
-    $whereClauses[] = "(p.product_name LIKE ? OR p.generic_name LIKE ?)";
+    // Search by product_id, product_name, or generic_name
+    $whereClauses[] = "(p.product_name LIKE ? OR p.generic_name LIKE ? OR p.product_id LIKE ?)";
     $searchParam = "%$searchTerm%";
     $params[] = $searchParam;
     $params[] = $searchParam;
-    $types .= "ss";
+    $params[] = $searchParam;
+    $types .= "sss";
 }
 
 if (!empty($whereClauses)) {
@@ -126,7 +131,7 @@ $products = $stmt->get_result();
                                 <div class="col-md-3">
                                     <label class="form-label">Search Product</label>
                                     <input type="text" class="form-control" name="search"
-                                        placeholder="Product name or generic name"
+                                        placeholder="Product ID or Name"
                                         value="<?php echo htmlspecialchars($searchTerm); ?>">
                                 </div>
                                 <div class="col-md-3">
@@ -187,7 +192,7 @@ $products = $stmt->get_result();
                                             $isActive = $product['status'] === 'active';
                                             ?>
                                             <tr class="<?php echo !$isActive ? 'table-secondary' : ''; ?>">
-                                                <td><?php echo $product['product_id']; ?></td>
+                                                <td><strong><?php echo $product['product_id']; ?></strong></td>
                                                 <td>
                                                     <strong><?php echo htmlspecialchars($product['product_name']); ?></strong>
                                                     <?php if (!$isActive): ?>
@@ -268,19 +273,33 @@ $products = $stmt->get_result();
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="unit" class="form-label">Unit</label>
-                                    <input type="text" class="form-control" id="unit" name="unit" placeholder="e.g., Tablet, Capsule">
+                                    <input type="text" class="form-control" id="unit" name="unit" placeholder="e.g., Kg, L">
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="reorderLevel" class="form-label">Reorder Level *</label>
                                     <input type="number" class="form-control" id="reorderLevel" name="reorder_level" value="10" required>
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="productStatus" class="form-label">Status *</label>
                                     <select class="form-select" id="productStatus" name="status" required>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="productSupplierId" class="form-label">Supplier (Optional)</label>
+                                    <select class="form-select" id="productSupplierId" name="product_supplier_id">
+                                        <option value="">-- None --</option>
+                                        <?php
+                                        $suppliers->data_seek(0);
+                                        while ($supplier = $suppliers->fetch_assoc()):
+                                        ?>
+                                            <option value="<?php echo $supplier['supplier_id']; ?>">
+                                                <?php echo htmlspecialchars($supplier['name']); ?>
+                                            </option>
+                                        <?php endwhile; ?>
                                     </select>
                                 </div>
                             </div>
@@ -302,6 +321,9 @@ $products = $stmt->get_result();
                                 <div class="alert alert-info">
                                     <small><i class="icon">ℹ️</i> You can add stock details now or add them later from Stock Management page.</small>
                                 </div>
+                                
+
+                                
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="batchNo" class="form-label">Batch Number *</label>
@@ -354,7 +376,7 @@ $products = $stmt->get_result();
             if (checkbox.checked) {
                 stockFields.style.display = 'block';
                 fields.forEach(field => {
-                    if (field.name !== 'batch_no') {
+                    if (field.name !== 'batch_no' && field.name !== 'cost_price') {
                         field.setAttribute('required', 'required');
                     }
                 });
@@ -395,6 +417,7 @@ $products = $stmt->get_result();
                         document.getElementById('unit').value = data.product.unit || '';
                         document.getElementById('reorderLevel').value = data.product.reorder_level;
                         document.getElementById('productStatus').value = data.product.status;
+                        document.getElementById('productSupplierId').value = data.product.supplier_id || '';
                         document.getElementById('initialStockSection').style.display = 'none';
                         productModal.show();
                     } else {

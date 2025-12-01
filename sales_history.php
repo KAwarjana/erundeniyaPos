@@ -1,14 +1,16 @@
 <?php
+require_once 'config.php';
 require_once 'auth.php';
 Auth::requireAuth();
 
 $conn = getDBConnection();
 
 // Get filter parameters
-$dateFrom = $_GET['date_from'] ?? date('Y-m-01');
-$dateTo = $_GET['date_to'] ?? date('Y-m-d');
+$dateFrom = $_GET['date_from'] ?? '';
+$dateTo = $_GET['date_to'] ?? '';
 $paymentType = $_GET['payment_type'] ?? '';
 
+// Build the query
 $sql = "SELECT 
     s.sale_id,
     s.sale_date,
@@ -22,37 +24,79 @@ $sql = "SELECT
 FROM sales s
 LEFT JOIN customers c ON s.customer_id = c.customer_id
 LEFT JOIN users u ON s.user_id = u.user_id
-LEFT JOIN sale_items si ON s.sale_id = si.sale_id
-WHERE DATE(s.sale_date) BETWEEN ? AND ?";
+LEFT JOIN sale_items si ON s.sale_id = si.sale_id";
 
-$params = [$dateFrom, $dateTo];
-$types = "ss";
+$whereConditions = [];
+$params = [];
+$types = "";
 
+// Add date filter only if both dates are provided
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $whereConditions[] = "DATE(s.sale_date) BETWEEN ? AND ?";
+    $params[] = $dateFrom;
+    $params[] = $dateTo;
+    $types .= "ss";
+}
+
+// Add payment type filter if provided
 if (!empty($paymentType)) {
-    $sql .= " AND s.payment_type = ?";
+    $whereConditions[] = "s.payment_type = ?";
     $params[] = $paymentType;
     $types .= "s";
+}
+
+// Add WHERE clause if there are conditions
+if (!empty($whereConditions)) {
+    $sql .= " WHERE " . implode(" AND ", $whereConditions);
 }
 
 $sql .= " GROUP BY s.sale_id ORDER BY s.sale_date DESC";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
+if (!$stmt) {
+    die("Query preparation failed: " . $conn->error);
+}
+
+// Bind parameters only if there are any
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
 $stmt->execute();
 $sales = $stmt->get_result();
 
 // Get summary
-$summaryStmt = $conn->prepare("SELECT 
+$summarySQL = "SELECT 
     COUNT(*) as total_sales,
     SUM(net_amount) as total_revenue,
     SUM(discount) as total_discount
-FROM sales 
-WHERE DATE(sale_date) BETWEEN ? AND ?" . (!empty($paymentType) ? " AND payment_type = ?" : ""));
+FROM sales";
+
+$summaryWhere = [];
+$summaryParams = [];
+$summaryTypes = "";
+
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $summaryWhere[] = "DATE(sale_date) BETWEEN ? AND ?";
+    $summaryParams[] = $dateFrom;
+    $summaryParams[] = $dateTo;
+    $summaryTypes .= "ss";
+}
 
 if (!empty($paymentType)) {
-    $summaryStmt->bind_param("sss", $dateFrom, $dateTo, $paymentType);
-} else {
-    $summaryStmt->bind_param("ss", $dateFrom, $dateTo);
+    $summaryWhere[] = "payment_type = ?";
+    $summaryParams[] = $paymentType;
+    $summaryTypes .= "s";
+}
+
+if (!empty($summaryWhere)) {
+    $summarySQL .= " WHERE " . implode(" AND ", $summaryWhere);
+}
+
+$summaryStmt = $conn->prepare($summarySQL);
+
+if (!empty($summaryParams)) {
+    $summaryStmt->bind_param($summaryTypes, ...$summaryParams);
 }
 
 $summaryStmt->execute();
@@ -60,19 +104,16 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
 ?>
 <!doctype html>
 <html lang="en" dir="ltr" data-bs-theme="light">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>E. W. D. Erundeniya</title>
-
+    <title>Sales History - E. W. D. Erundeniya</title>
     <link rel="shortcut icon" href="assets/images/logoblack.png">
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.css">
 </head>
-
 <body>
     <div id="loading">
         <div class="loader simple-loader">
@@ -97,7 +138,7 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                     <h4 class="mb-0"><?php echo number_format(intval($summary['total_sales'] ?? 0)); ?></h4>
                                 </div>
                                 <div class="rounded-circle bg-soft-primary p-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M3 9L12 2L21 9V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V9Z" stroke="currentColor" stroke-width="2" />
                                     </svg>
                                 </div>
@@ -114,7 +155,7 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                     <h4 class="mb-0 text-success">Rs. <?php echo number_format(floatval($summary['total_revenue'] ?? 0), 2); ?></h4>
                                 </div>
                                 <div class="rounded-circle bg-soft-success p-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 2V22M17 5H9.5C7.01472 5 5 7.01472 5 9.5C5 11.9853 7.01472 14 9.5 14H14.5C16.9853 14 19 16.0147 19 18.5C19 20.9853 16.9853 23 14.5 23H6" stroke="currentColor" stroke-width="2" />
                                     </svg>
                                 </div>
@@ -131,7 +172,7 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                     <h4 class="mb-0 text-danger">Rs. <?php echo number_format(floatval($summary['total_discount'] ?? 0), 2); ?></h4>
                                 </div>
                                 <div class="rounded-circle bg-soft-danger p-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M9 2L2 9L9 16M15 8L22 15L15 22" stroke="currentColor" stroke-width="2" />
                                     </svg>
                                 </div>
@@ -192,7 +233,10 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while ($sale = $sales->fetch_assoc()): ?>
+                                        <?php 
+                                        if ($sales->num_rows > 0):
+                                            while ($sale = $sales->fetch_assoc()): 
+                                        ?>
                                             <tr>
                                                 <td><strong>#<?php echo str_pad($sale['sale_id'], 5, '0', STR_PAD_LEFT); ?></strong></td>
                                                 <td><?php echo date('M d, Y h:i A', strtotime($sale['sale_date'])); ?></td>
@@ -221,7 +265,23 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
                                                     </button>
                                                 </td>
                                             </tr>
-                                        <?php endwhile; ?>
+                                        <?php 
+                                            endwhile;
+                                        else:
+                                        ?>
+                                            <tr>
+                                                <td colspan="10" class="text-center py-4">
+                                                    <div class="alert alert-info mb-0">
+                                                        <strong>No sales found</strong><br>
+                                                        <?php if (!empty($dateFrom) || !empty($dateTo) || !empty($paymentType)): ?>
+                                                            There are no sales records for the selected filters. Try adjusting your search criteria.
+                                                        <?php else: ?>
+                                                            There are no sales records in the system yet.
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -233,23 +293,6 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
 
         <?php include 'includes/footer.php'; ?>
     </main>
-
-    <!-- View Sale Modal -->
-    <div class="modal fade" id="viewSaleModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sale Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="saleDetailsContent">
-                    <div class="text-center py-5">
-                        <div class="spinner-border" role="status"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
@@ -266,13 +309,18 @@ $summary = $summaryStmt->get_result()->fetch_assoc();
 
         function exportSalesReport() {
             const urlParams = new URLSearchParams(window.location.search);
-            const dateFrom = urlParams.get('date_from') || '<?php echo $dateFrom; ?>';
-            const dateTo = urlParams.get('date_to') || '<?php echo $dateTo; ?>';
-            const paymentType = urlParams.get('payment_type') || '';
-
-            window.location.href = 'export_sales.php?date_from=' + dateFrom + '&date_to=' + dateTo + '&payment_type=' + paymentType;
+            let exportUrl = 'export_sales.php?';
+            
+            const dateFrom = urlParams.get('date_from');
+            const dateTo = urlParams.get('date_to');
+            const paymentType = urlParams.get('payment_type');
+            
+            if (dateFrom) exportUrl += 'date_from=' + dateFrom + '&';
+            if (dateTo) exportUrl += 'date_to=' + dateTo + '&';
+            if (paymentType) exportUrl += 'payment_type=' + paymentType;
+            
+            window.location.href = exportUrl;
         }
     </script>
 </body>
-
 </html>

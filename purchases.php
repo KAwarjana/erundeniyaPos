@@ -5,8 +5,8 @@ Auth::requireAuth();
 $conn = getDBConnection();
 
 // Get filter parameters
-$dateFrom = $_GET['date_from'] ?? date('Y-m-01');
-$dateTo = $_GET['date_to'] ?? date('Y-m-d');
+$dateFrom = $_GET['date_from'] ?? '';
+$dateTo = $_GET['date_to'] ?? '';
 $supplierId = $_GET['supplier_id'] ?? '';
 
 // Build query with filters
@@ -18,36 +18,74 @@ $sql = "SELECT
 FROM purchases p
 LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
 LEFT JOIN users u ON p.user_id = u.user_id
-LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id
-WHERE DATE(p.purchase_date) BETWEEN ? AND ?";
+LEFT JOIN purchase_items pi ON p.purchase_id = pi.purchase_id";
 
-$params = [$dateFrom, $dateTo];
-$types = "ss";
+$whereConditions = [];
+$params = [];
+$types = "";
+
+// Add date filter only if both dates are provided
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $whereConditions[] = "DATE(p.purchase_date) BETWEEN ? AND ?";
+    $params[] = $dateFrom;
+    $params[] = $dateTo;
+    $types .= "ss";
+}
 
 if (!empty($supplierId)) {
-    $sql .= " AND p.supplier_id = ?";
+    $whereConditions[] = "p.supplier_id = ?";
     $params[] = $supplierId;
     $types .= "i";
+}
+
+// Add WHERE clause if there are conditions
+if (!empty($whereConditions)) {
+    $sql .= " WHERE " . implode(" AND ", $whereConditions);
 }
 
 $sql .= " GROUP BY p.purchase_id ORDER BY p.purchase_date DESC";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
+
+// Bind parameters only if there are any
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
 $stmt->execute();
 $purchases = $stmt->get_result();
 
 // Get summary
-$summaryStmt = $conn->prepare("SELECT 
+$summarySQL = "SELECT 
     COUNT(*) as total_purchases,
     SUM(total_amount) as total_amount
-FROM purchases 
-WHERE DATE(purchase_date) BETWEEN ? AND ?" . (!empty($supplierId) ? " AND supplier_id = ?" : ""));
+FROM purchases";
+
+$summaryWhere = [];
+$summaryParams = [];
+$summaryTypes = "";
+
+if (!empty($dateFrom) && !empty($dateTo)) {
+    $summaryWhere[] = "DATE(purchase_date) BETWEEN ? AND ?";
+    $summaryParams[] = $dateFrom;
+    $summaryParams[] = $dateTo;
+    $summaryTypes .= "ss";
+}
 
 if (!empty($supplierId)) {
-    $summaryStmt->bind_param("ssi", $dateFrom, $dateTo, $supplierId);
-} else {
-    $summaryStmt->bind_param("ss", $dateFrom, $dateTo);
+    $summaryWhere[] = "supplier_id = ?";
+    $summaryParams[] = $supplierId;
+    $summaryTypes .= "i";
+}
+
+if (!empty($summaryWhere)) {
+    $summarySQL .= " WHERE " . implode(" AND ", $summaryWhere);
+}
+
+$summaryStmt = $conn->prepare($summarySQL);
+
+if (!empty($summaryParams)) {
+    $summaryStmt->bind_param($summaryTypes, ...$summaryParams);
 }
 
 $summaryStmt->execute();
@@ -67,7 +105,70 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/css/custom.css">
+    
+    <style>
+        .supplier-search-wrapper {
+            position: relative;
+        }
+        
+        .supplier-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 0.375rem 0.375rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .supplier-dropdown.show {
+            display: block;
+        }
+        
+        .supplier-dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+        
+        .supplier-dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .supplier-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .supplier-dropdown-item.selected {
+            background-color: #e7f3ff;
+            font-weight: 500;
+        }
+        
+        .no-results {
+            padding: 15px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        #supplierSearchInput {
+            border-radius: 0.375rem;
+        }
+        
+        #supplierSearchInput:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
 </head>
 <body>
     <div id="loading">
@@ -121,17 +222,23 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <div class="header-title">
-                                <h4 class="card-title">Purchase History</h4>
-                            </div>
-                            <div>
-                                <p class="text-muted mb-0"><i>Note: New purchases are created through Stock Management by adding new batches.</i></p>
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-12 col-md-auto mb-2 mb-md-0">
+                                    <h4 class="card-title mb-0">Purchase History</h4>
+                                    <p class="text-muted mb-0 small"><i>Note: New purchases are created through Stock Management by adding new batches.</i></p>
+                                </div>
+                                <div class="col"></div>
+                                <div class="col-12 col-md-auto">
+                                    <button class="btn btn-success w-100 w-md-auto text-nowrap" onclick="exportPurchases()">
+                                        📊 Export to CSV
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
                             <!-- Filters -->
-                            <form method="GET" class="row g-3 mb-4">
+                            <form method="GET" id="filterForm" class="row g-3 mb-4">
                                 <div class="col-md-3">
                                     <label class="form-label">Date From</label>
                                     <input type="date" class="form-control" name="date_from" value="<?php echo $dateFrom; ?>">
@@ -142,18 +249,17 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Supplier</label>
-                                    <select class="form-select" name="supplier_id">
-                                        <option value="">All Suppliers</option>
-                                        <?php 
-                                        $suppliers->data_seek(0);
-                                        while ($supplier = $suppliers->fetch_assoc()): 
-                                        ?>
-                                            <option value="<?php echo $supplier['supplier_id']; ?>" 
-                                                    <?php echo $supplierId == $supplier['supplier_id'] ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($supplier['name']); ?>
-                                            </option>
-                                        <?php endwhile; ?>
-                                    </select>
+                                    <div class="supplier-search-wrapper">
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="supplierSearchInput" 
+                                            placeholder="Type to search supplier..."
+                                            autocomplete="off"
+                                        >
+                                        <input type="hidden" name="supplier_id" id="supplierIdInput" value="<?php echo $supplierId; ?>">
+                                        <div class="supplier-dropdown" id="supplierDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-md-3 d-flex align-items-end gap-2">
                                     <button type="submit" class="btn btn-primary">Filter</button>
@@ -190,8 +296,14 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
                                         <?php else: ?>
                                             <tr>
                                                 <td colspan="7" class="text-center py-5">
-                                                    <p class="text-muted">No purchases found for the selected filters</p>
-                                                    <small>Try adjusting your filter criteria or add new product batches in Stock Management</small>
+                                                    <div class="alert alert-info mb-0">
+                                                        <strong>No purchases found</strong><br>
+                                                        <?php if (!empty($dateFrom) || !empty($dateTo) || !empty($supplierId)): ?>
+                                                            There are no purchase records for the selected filters. Try adjusting your search criteria.
+                                                        <?php else: ?>
+                                                            There are no purchase records in the system yet. Add new product batches in Stock Management to create purchases.
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endif; ?>
@@ -231,5 +343,127 @@ $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
     <script src="assets/js/hope-ui.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.all.min.js"></script>
+    
+    <script>
+        function exportPurchases() {
+            Swal.fire({
+                title: 'Exporting...',
+                text: 'Preparing your purchases report',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            window.location.href = 'export_purchases.php?' + urlParams.toString();
+
+            setTimeout(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Purchases report exported successfully',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 1000);
+        }
+    
+        // Supplier data from PHP
+        const suppliers = [
+            { id: '', name: 'All Suppliers' },
+            <?php 
+            $suppliers->data_seek(0);
+            while ($supplier = $suppliers->fetch_assoc()): 
+            ?>
+            ,{ 
+                id: <?php echo $supplier['supplier_id']; ?>, 
+                name: '<?php echo addslashes($supplier['name']); ?>' 
+            },
+            <?php endwhile; ?>
+        ];
+
+        const searchInput = document.getElementById('supplierSearchInput');
+        const dropdown = document.getElementById('supplierDropdown');
+        const hiddenInput = document.getElementById('supplierIdInput');
+
+        // Set initial value if supplier is selected
+        const selectedSupplierId = '<?php echo $supplierId; ?>';
+        if (selectedSupplierId) {
+            const selectedSupplier = suppliers.find(s => s.id == selectedSupplierId);
+            if (selectedSupplier) {
+                searchInput.value = selectedSupplier.name;
+            }
+        } else {
+            searchInput.value = 'All Suppliers';
+        }
+
+        // Filter and display suppliers
+        function filterSuppliers(searchTerm) {
+            const filtered = suppliers.filter(supplier => 
+                supplier.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="no-results">No suppliers found</div>';
+            } else {
+                dropdown.innerHTML = filtered.map(supplier => {
+                    const isSelected = supplier.id == hiddenInput.value;
+                    return `
+                        <div class="supplier-dropdown-item ${isSelected ? 'selected' : ''}" 
+                             data-id="${supplier.id}" 
+                             data-name="${supplier.name}">
+                            ${supplier.name}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            dropdown.classList.add('show');
+        }
+
+        // Show all suppliers on focus
+        searchInput.addEventListener('focus', function() {
+            this.select();
+            filterSuppliers('');
+        });
+
+        // Filter as user types
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            filterSuppliers(searchTerm);
+        });
+
+        // Handle supplier selection
+        dropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.supplier-dropdown-item');
+            if (item) {
+                const supplierId = item.dataset.id;
+                const supplierName = item.dataset.name;
+                
+                searchInput.value = supplierName;
+                hiddenInput.value = supplierId;
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Handle keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 </html>

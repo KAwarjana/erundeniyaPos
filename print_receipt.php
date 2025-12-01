@@ -406,7 +406,11 @@ $items = $stmt->get_result();
             <p style="font-size: 9px; margin-top: 10px;">
                 © <?php echo date('Y'); ?>E. W. D. එරුන්දෙනිය හෙළ ඔසුසල<br>
                 All rights reserved<br>
-                Goods once sold cannot be returned
+                Goods once sold cannot be returned.
+            </p>
+            <!-- <br/> -->
+            <p style="font-size: 9px; margin-top: 10px;">
+                Powered By www.evotech.lk
             </p>
         </div>
     </div>
