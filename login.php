@@ -48,6 +48,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <style>
+        .password-field-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 10;
+            color: #6c757d;
+            font-size: 18px;
+        }
+        
+        .password-toggle-icon:hover {
+            color: #495057;
+        }
+        
+        .password-field-wrapper input {
+            padding-right: 40px;
+        }
+        
+        /* Fix autocomplete background color */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #000 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        
+        /* For darker themes, adjust the color */
+        input:-webkit-autofill {
+            caret-color: #000;
+        }
+    </style>
 </head>
 
 <body>
@@ -87,8 +128,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <div class="col-lg-12">
                                                 <div class="form-group">
                                                     <label for="password" class="form-label">Password</label>
-                                                    <input type="password" class="form-control" id="password" name="password"
-                                                        placeholder="Enter password" required>
+                                                    <div class="password-field-wrapper">
+                                                        <input type="password" class="form-control" id="password" name="password"
+                                                            placeholder="Enter password" required>
+                                                        <span class="password-toggle-icon" onclick="togglePassword('password', this)">
+                                                            <i class="bi bi-eye"></i>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-lg-12 d-flex justify-content-between">
@@ -117,6 +163,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
     <script src="assets/js/hope-ui.js" defer></script>
+    
+    <script>
+        function togglePassword(fieldId, iconElement) {
+            const field = document.getElementById(fieldId);
+            const icon = iconElement.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    </script>
 </body>
 
 </html>

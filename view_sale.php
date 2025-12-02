@@ -194,6 +194,21 @@ $items = $stmt->get_result();
             background: #fff3cd;
             color: #856404;
         }
+
+        /* Fix autocomplete background color */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #000 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        
+        /* For darker themes, adjust the color */
+        input:-webkit-autofill {
+            caret-color: #000;
+        }
     </style>
 </head>
 <body>

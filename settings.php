@@ -26,8 +26,49 @@ $users = $conn->query("SELECT u.*, r.role_name
     <link rel="stylesheet" href="assets/css/core/libs.min.css">
     <link rel="stylesheet" href="assets/css/hope-ui.min.css?v=5.0.0">
     <link rel="stylesheet" href="assets/css/custom.min.css?v=5.0.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.min.css ">
     <link rel="stylesheet" href="assets/css/custom.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <style>
+        .password-field-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 10;
+            color: #6c757d;
+            font-size: 18px;
+        }
+        
+        .password-toggle-icon:hover {
+            color: #495057;
+        }
+        
+        .password-field-wrapper input {
+            padding-right: 40px;
+        }
+
+        /* Fix autocomplete background color */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #000 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        
+        /* For darker themes, adjust the color */
+        input:-webkit-autofill {
+            caret-color: #000;
+        }
+    </style>
 </head>
 
 <body>
@@ -78,7 +119,7 @@ $users = $conn->query("SELECT u.*, r.role_name
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Email</label>
-                                                    <input type="email" class="form-control" id="email" value="<?php echo htmlspecialchars($userInfo['email']); ?>">
+                                                    <input type="email" class="form-control" id="email" value="<?php echo htmlspecialchars($userInfo['email'] ?: 'N/A'); ?>">
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Username</label>
@@ -93,15 +134,30 @@ $users = $conn->query("SELECT u.*, r.role_name
                                             <form id="passwordForm">
                                                 <div class="mb-3">
                                                     <label class="form-label">Current Password</label>
-                                                    <input type="password" class="form-control" id="currentPassword" required>
+                                                    <div class="password-field-wrapper">
+                                                        <input type="password" class="form-control" id="currentPassword" required>
+                                                        <span class="password-toggle-icon" onclick="togglePassword('currentPassword', this)">
+                                                            <i class="bi bi-eye"></i>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">New Password</label>
-                                                    <input type="password" class="form-control" id="newPassword" required>
+                                                    <div class="password-field-wrapper">
+                                                        <input type="password" class="form-control" id="newPassword" required>
+                                                        <span class="password-toggle-icon" onclick="togglePassword('newPassword', this)">
+                                                            <i class="bi bi-eye"></i>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Confirm New Password</label>
-                                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                                    <div class="password-field-wrapper">
+                                                        <input type="password" class="form-control" id="confirmPassword" required>
+                                                        <span class="password-toggle-icon" onclick="togglePassword('confirmPassword', this)">
+                                                            <i class="bi bi-eye"></i>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                                 <button type="button" class="btn btn-warning" onclick="changePassword()">Change Password</button>
                                             </form>
@@ -140,13 +196,13 @@ $users = $conn->query("SELECT u.*, r.role_name
                                                         <td><?php echo $user['user_id']; ?></td>
                                                         <td><strong><?php echo htmlspecialchars($user['username']); ?></strong></td>
                                                         <td><?php echo htmlspecialchars($user['full_name']); ?></td>
-                                                        <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                                        <td><?php echo !empty($user['email']) ? htmlspecialchars($user['email']) : 'N/A'; ?></td>
                                                         <td><span class="badge bg-primary"><?php echo htmlspecialchars($user['role_name'] ?? 'No Role'); ?></span></td>
                                                         <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
                                                         <td>
                                                             <?php if ($user['user_id'] != $userInfo['user_id']): ?>
                                                                 <button class="btn btn-sm btn-icon btn-danger" onclick="deleteUser(<?php echo $user['user_id']; ?>)">
-                                                                    <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                    <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
                                                                         <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
                                                                         <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                                     </svg>
@@ -193,7 +249,7 @@ $users = $conn->query("SELECT u.*, r.role_name
                                                         <td><strong><?php echo htmlspecialchars($role['role_name']); ?></strong></td>
                                                         <td>
                                                             <button class="btn btn-sm btn-icon btn-danger" onclick="deleteRole(<?php echo $role['role_id']; ?>)">
-                                                                <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg ">
                                                                     <path d="M19.3248 9.46826C19.3248 9.46826 18.7818 16.2033 18.4668 19.0403C18.3168 20.3953 17.4798 21.1893 16.1088 21.2143C13.4998 21.2613 10.8878 21.2643 8.27979 21.2093C6.96079 21.1823 6.13779 20.3783 5.99079 19.0473C5.67379 16.1853 5.13379 9.46826 5.13379 9.46826" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
                                                                     <path d="M20.708 6.23975H3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                                 </svg>
@@ -290,11 +346,25 @@ $users = $conn->query("SELECT u.*, r.role_name
     <script src="assets/js/core/libs.min.js"></script>
     <script src="assets/js/core/external.min.js"></script>
     <script src="assets/js/hope-ui.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.all.min.js "></script>
 
     <script>
         const userModal = new bootstrap.Modal(document.getElementById('userModal'));
         const roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
+
+        function togglePassword(fieldId, iconElement) {
+            const field = document.getElementById(fieldId);
+            const icon = iconElement.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
 
         function updateProfile() {
             const fullName = document.getElementById('fullName').value;
