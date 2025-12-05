@@ -22,11 +22,18 @@ class Auth {
             return false;
         }
         
-        if (is_array($roleId)) {
-            return in_array($_SESSION['role_id'], $roleId);
+        // Add safety check for role_id
+        $userRoleId = $_SESSION['role_id'] ?? null;
+        
+        if ($userRoleId === null) {
+            return false;
         }
         
-        return $_SESSION['role_id'] == $roleId;
+        if (is_array($roleId)) {
+            return in_array($userRoleId, $roleId);
+        }
+        
+        return $userRoleId == $roleId;
     }
     
     // Require specific role (redirect if not authorized)
@@ -34,12 +41,12 @@ class Auth {
         self::requireAuth();
         
         if (is_array($roleId)) {
-            if (!in_array($_SESSION['role_id'], $roleId)) {
+            if (!in_array($_SESSION['role_id'] ?? null, $roleId)) {
                 header("Location: " . $redirectTo);
                 exit();
             }
         } else {
-            if ($_SESSION['role_id'] != $roleId) {
+            if (($_SESSION['role_id'] ?? null) != $roleId) {
                 header("Location: " . $redirectTo);
                 exit();
             }
@@ -92,13 +99,16 @@ class Auth {
             }
             
             if ($passwordValid) {
-                // Set session variables
+                // Set session variables with null coalescing for safety
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['username'] = $user['username'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role_id'] = $user['role_id'];
-                $_SESSION['role_name'] = $user['role_name'];
+                $_SESSION['full_name'] = $user['full_name'] ?? '';
+                $_SESSION['email'] = $user['email'] ?? '';
+                $_SESSION['role_id'] = $user['role_id'] ?? 0;
+                $_SESSION['role_name'] = $user['role_name'] ?? 'User';
+                
+                // Regenerate session ID for security
+                session_regenerate_id(true);
                 
                 return true;
             }
@@ -109,7 +119,17 @@ class Auth {
     
     // Logout user
     public static function logout() {
+        // Unset all session variables
+        $_SESSION = array();
+        
+        // Destroy the session cookie
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+        
+        // Destroy the session
         session_destroy();
+        
         header("Location: login.php");
         exit();
     }
@@ -118,12 +138,12 @@ class Auth {
     public static function getUserInfo() {
         if (self::isLoggedIn()) {
             return [
-                'user_id' => $_SESSION['user_id'],
-                'username' => $_SESSION['username'],
-                'full_name' => $_SESSION['full_name'],
-                'email' => $_SESSION['email'],
-                'role_id' => $_SESSION['role_id'],
-                'role_name' => $_SESSION['role_name']
+                'user_id' => $_SESSION['user_id'] ?? null,
+                'username' => $_SESSION['username'] ?? null,
+                'full_name' => $_SESSION['full_name'] ?? '',
+                'email' => $_SESSION['email'] ?? '',
+                'role_id' => $_SESSION['role_id'] ?? null,
+                'role_name' => $_SESSION['role_name'] ?? 'User'
             ];
         }
         return null;
@@ -151,7 +171,41 @@ class Auth {
         if ($stmt->execute()) {
             return ['success' => true, 'message' => 'User registered successfully'];
         } else {
-            return ['success' => false, 'message' => 'Registration failed'];
+            return ['success' => false, 'message' => 'Registration failed: ' . $stmt->error];
+        }
+    }
+    
+    // Update user password
+    public static function updatePassword($userId, $newPassword) {
+        $conn = getDBConnection();
+        
+        $password_hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE user_id = ?");
+        $stmt->bind_param("si", $password_hash, $userId);
+        
+        if ($stmt->execute()) {
+            return ['success' => true, 'message' => 'Password updated successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Password update failed'];
+        }
+    }
+    
+    // Update user profile
+    public static function updateProfile($userId, $full_name, $email) {
+        $conn = getDBConnection();
+        
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ? WHERE user_id = ?");
+        $stmt->bind_param("ssi", $full_name, $email, $userId);
+        
+        if ($stmt->execute()) {
+            // Update session variables
+            if (self::isLoggedIn() && $_SESSION['user_id'] == $userId) {
+                $_SESSION['full_name'] = $full_name;
+                $_SESSION['email'] = $email;
+            }
+            return ['success' => true, 'message' => 'Profile updated successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Profile update failed'];
         }
     }
 }

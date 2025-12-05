@@ -1,6 +1,12 @@
 <?php
 $userInfo = Auth::getUserInfo();
 $isAdmin = Auth::isAdmin();
+
+// Redirect to login if not authenticated
+if ($userInfo === null) {
+    header("Location: login.php");
+    exit();
+}
 ?>
 <div class="position-relative iq-banner">
     <nav class="nav navbar navbar-expand-xl navbar-light iq-navbar">
@@ -20,7 +26,7 @@ $isAdmin = Auth::isAdmin();
                     <img src="assets/images/avatars/01.png" alt="User-Profile"
                         class="theme-color-default-img img-fluid avatar avatar-50 avatar-rounded">
                     <div class="caption ms-3 d-none d-md-block">
-                        <h6 class="mb-0 caption-title"><?php echo htmlspecialchars($userInfo['full_name']); ?></h6>
+                        <h6 class="mb-0 caption-title"><?php echo htmlspecialchars($userInfo['full_name'] ?? 'Guest'); ?></h6>
                         <small class="text-muted"><?php echo htmlspecialchars($userInfo['role_name'] ?? 'User'); ?></small>
                     </div>
                 </a>
@@ -43,7 +49,7 @@ $isAdmin = Auth::isAdmin();
                 <div class="col-md-12">
                     <div class="flex-wrap d-flex justify-content-between align-items-center">
                         <div>
-                            <h1>Welcome Back, <?php echo htmlspecialchars($userInfo['full_name']); ?>!</h1>
+                            <h1>Welcome Back, <?php echo htmlspecialchars($userInfo['full_name'] ?? 'Guest'); ?>!</h1>
                             <p>Manage your pharmacy efficiently with our system.</p>
                         </div>
                     </div>
